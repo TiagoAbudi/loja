@@ -23,7 +23,7 @@ interface AppRoutesProps {
 
 export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/loja">
             <Routes>
                 {/* Rotas Públicas */}
                 <Route path="/login" element={!session ? <LoginPage /> : <Navigate to="/" replace />} />
