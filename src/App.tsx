@@ -1,26 +1,73 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { supabase } from './supabaseClient';
+import { Session } from '@supabase/supabase-js';
+import { AppRoutes } from './routes';
+import { ColorModeContext } from './contexts/ThemeContext';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+type ColorMode = 'light' | 'dark';
+
+const App: React.FC = () => {
+    const [session, setSession] = useState<Session | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    const [mode, setMode] = useState<ColorMode>(() => {
+        const savedMode = localStorage.getItem('themeMode') as ColorMode;
+        return savedMode || 'light';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('themeMode', mode);
+    }, [mode]);
+
+
+    const colorMode = useMemo(
+        () => ({
+            toggleColorMode: () => {
+                setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+            },
+        }),
+        [],
+    );
+
+    const theme = useMemo(
+        () =>
+            createTheme({
+                palette: {
+                    mode: mode,
+                },
+                shape: {
+                  borderRadius: 16,
+                }
+            }),
+        [mode],
+    );
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setLoading(false);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    if (loading) {
+        return <div>Carregando...</div>;
+    }
+
+    return (
+        <ColorModeContext.Provider value={colorMode}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <AppRoutes session={session} />
+            </ThemeProvider>
+        </ColorModeContext.Provider>
+    );
+};
 
 export default App;
