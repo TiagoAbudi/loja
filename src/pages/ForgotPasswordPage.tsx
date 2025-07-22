@@ -1,4 +1,3 @@
-// Nenhuma mudança aqui, este código já estava correto.
 import React from 'react';
 import { Container, Box, Typography, TextField, Button, Paper, Alert, Link as MuiLink } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';

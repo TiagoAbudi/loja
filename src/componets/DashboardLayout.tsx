@@ -64,7 +64,7 @@ const DashboardLayout: React.FC = () => {
         </ListItemButton>
          <ListItemButton
           component={RouterLink}
-          to="/configuracoes" // Exemplo de rota
+          to="/configuracoes"
           selected={location.pathname === '/configuracoes'}
         >
           <ListItemIcon><SettingsIcon /></ListItemIcon>

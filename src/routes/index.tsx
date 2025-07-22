@@ -25,13 +25,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
     return (
         <BrowserRouter basename="/loja">
             <Routes>
-                {/* Rotas Públicas */}
                 <Route path="/login" element={!session ? <LoginPage /> : <Navigate to="/" replace />} />
                 <Route path="/signup" element={!session ? <SignUpPage /> : <Navigate to="/" replace />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/update-password" element={<ResetPasswordPage />} />
 
-                {/* Rotas Protegidas */}
                 <Route path="/" element={<ProtectedRoute session={session} />}>
                     <Route index element={<HomePage />} />
                 </Route>
