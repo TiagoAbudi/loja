@@ -41,3 +41,16 @@
     -->
   </body>
 </html>
+
+<script type="text/javascript">
+  (function() {
+    // Pega a URL guardada que causou o 404
+    var redirect = sessionStorage.getItem('redirect');
+    if (redirect) {
+      // Limpa o item guardado
+      sessionStorage.removeItem('redirect');
+      // Usa a History API para corrigir a URL na barra de endereço sem recarregar a página
+      window.history.replaceState(null, null, redirect);
+    }
+  })();
+</script>
