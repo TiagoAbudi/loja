@@ -40,8 +40,6 @@ Uma aplicação web completa para controle de estoque e gerenciamento de produto
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
-[![Acessar Demonstração Online](https://img.shields.io/badge/Acessar-Demo%20Online-brightgreen?style=for-the-badge&logo=github)](https://tiagoabudi.github.io/loja/)
-
 ---
 
 ## 🚀 Como Executar o Projeto Localmente
