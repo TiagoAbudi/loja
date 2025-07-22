@@ -14,7 +14,7 @@ const ForgotPasswordPage: React.FC = () => {
         event.preventDefault();
         setLoading(true);
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'http://localhost:3000/update-password',
+            redirectTo: `${process.env.REACT_APP_SITE_URL}/update-password`,
         });
         setLoading(false);
         if (error) {
