@@ -1,6 +1,6 @@
-# Sistema de Para Lojas
+# Sistema de Gerenciamento para Lojas
 
-Uma aplicação web completa para controle de estoque e gerenciamento de produtos, construída com React e utilizando Supabase como backend e para autenticação de usuários.
+Uma aplicação web completa para controle de estoque e gerenciamento de produtos, vendas e clientes construída com React e utilizando Supabase como backend.
 
 [![Acessar Demonstração Online](https://img.shields.io/badge/Acessar-Demo%20Online-brightgreen?style=for-the-badge&logo=github)](https://tiagoabudi.github.io/loja/)
 
@@ -46,36 +46,53 @@ Uma aplicação web completa para controle de estoque e gerenciamento de produto
 
 Siga os passos abaixo para rodar o projeto na sua máquina.
 
-**1. Clone o repositório:**
+### 1. Clone o repositório
+
 ```bash
-git clone [https://github.com/TiagoAbudi/loja.git](https://github.com/TiagoAbudi/loja.git)
+git clone https://github.com/TiagoAbudi/loja.git
 cd loja
 ```
 
-**2. Instale as dependências:**
+### 2. Instale as dependências
+
 ```bash
 npm install
 ```
 
-**3. Configure as Variáveis de Ambiente:**
+### 3. Configure as Variáveis de Ambiente
 
-Crie um arquivo chamado `.env.local` na raiz do projeto. Ele será usado para suas chaves de desenvolvimento e não será enviado para o GitHub.
+A estrutura de variáveis de ambiente do projeto está separada por ambientes. Utilize os arquivos conforme necessário:
 
-Copie e cole o conteúdo abaixo no `.env.local`, substituindo pelas suas chaves do Supabase:
+- `.env.example`: Arquivo base com todas as chaves disponíveis como referência.
+- `.env.local`: Para desenvolvimento local (não é versionado).
+- `.env.development`: Configurações específicas de desenvolvimento.
+- `.env.production`: Usado para produção (ex: em builds do GitHub Pages ou outros ambientes).
+
+#### Para rodar localmente:
+
+Crie um arquivo `.env.local` na raiz do projeto com suas credenciais Supabase:
 
 ```env
-# Variáveis para o ambiente de desenvolvimento local
+# Variáveis de ambiente locais
 REACT_APP_SUPABASE_URL=SUA_URL_DO_SUPABASE
 REACT_APP_SUPABASE_ANON_KEY=SUA_CHAVE_ANON_DO_SUPABASE
 
-# URL base para os links de redirecionamento em desenvolvimento
+# URL base para links de redirecionamento em ambiente local
 REACT_APP_SITE_URL=http://localhost:3000/loja
 ```
 
-**4. Rode a aplicação:**
+Você pode usar o comando abaixo para criar a partir do exemplo:
+
+```bash
+cp .env.example .env.local
+```
+
+### 4. Rode a aplicação
+
 ```bash
 npm start
 ```
+
 A aplicação estará disponível em `http://localhost:3000/loja`.
 
 ---
@@ -89,12 +106,11 @@ A aplicação estará disponível em `http://localhost:3000/loja`.
 
 ---
 
-##  licença
+## 🧾 Licença
 
-Distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Distribuído sob a licença MIT. Veja o arquivo [LICENSE](https://github.com/TiagoAbudi/loja/blob/main/LICENSE) para mais detalhes.
 
 ---
 
-Feito por **Tiago Abudi**.
-
+Feito por **Tiago Abudi**  
 [GitHub](https://github.com/TiagoAbudi)
