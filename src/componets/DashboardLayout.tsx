@@ -15,6 +15,7 @@ import PeopleIcon from '@mui/icons-material/People';
 
 import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
+import myLogo from '../assets/logo.png';
 
 const drawerWidth = 240;
 
@@ -92,10 +93,11 @@ const DashboardLayout: React.FC = () => {
             color="inherit"
             aria-label="toggle drawer"
             onClick={handleDrawerToggle}
-            sx={{ marginRight: '36px' }}
+            sx={{ marginRight: '10px' }}
           >
             {open ? <ChevronLeftIcon /> : <MenuIcon />}
           </IconButton>
+          <Box component="img" sx={{ height: 30, mr: 2 }} alt="Logo da sua empresa" src={myLogo} />
           <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
             Meu App
           </Typography>
