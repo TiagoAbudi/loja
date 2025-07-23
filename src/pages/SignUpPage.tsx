@@ -40,7 +40,15 @@ const SignUpPage: React.FC = () => {
         setSuccessMessage(null);
 
         try {
-            const { error } = await supabase.auth.signUp({ email, password });
+            // AQUI ESTÁ A CORREÇÃO DA SINTAXE
+            const { data, error } = await supabase.auth.signUp({
+              email: email,
+              password: password,
+              options: {
+                emailRedirectTo: `${process.env.REACT_APP_SITE_URL}/login`,
+              }
+            });
+
             if (error) throw error;
             setSuccessMessage('Conta criada! Por favor, verifique seu e-mail para confirmar o cadastro.');
         } catch (error: any) {
