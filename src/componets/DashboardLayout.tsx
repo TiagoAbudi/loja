@@ -62,14 +62,14 @@ const DashboardLayout: React.FC = () => {
           <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
           <ListItemText primary="Produtos" />
         </ListItemButton>
-         <ListItemButton
+        {/* <ListItemButton
           component={RouterLink}
           to="/configuracoes"
           selected={location.pathname === '/configuracoes'}
         >
           <ListItemIcon><SettingsIcon /></ListItemIcon>
           <ListItemText primary="Configurações" />
-        </ListItemButton>
+        </ListItemButton> */}
       </List>
     </>
   );
