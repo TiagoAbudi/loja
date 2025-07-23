@@ -1,14 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Box, Chip, Button, Typography, Tooltip } from '@mui/material';
-import { DataGrid, GridColDef, GridActionsCellItem, GridRowParams } from '@mui/x-data-grid';
+import React, {
+    useEffect,
+    useState,
+    useCallback
+} from 'react';
+import {
+    Box,
+    Chip,
+    Tooltip
+} from '@mui/material';
+import {
+    GridColDef,
+    GridActionsCellItem,
+    GridRowParams
+} from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
 import ToggleOffIcon from '@mui/icons-material/ToggleOff';
 import { supabase } from '../supabaseClient';
 import { ProductFormDialog } from '../componets/ProductFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
+import { CustomDataGrid } from '../componets/CustomDataGrid';
 
 interface Product {
     id: number;
@@ -26,6 +38,76 @@ const ProductsPage: React.FC = () => {
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const columns: GridColDef[] = [
+        {
+            field: 'id',
+            headerName: 'ID',
+            width: 90,
+            align: 'center',
+            headerAlign: 'center'
+        },
+        {
+            field: 'sku',
+            headerName: 'SKU',
+            width: 150
+        },
+        {
+            field: 'nome',
+            headerName: 'Nome do Produto',
+            width: 250
+        },
+        {
+            field: 'preco',
+            headerName: 'Preço (R$)',
+            type: 'number',
+            width: 130,
+            valueFormatter: (value: number) => value == null ? '' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+        },
+        {
+            field: 'estoque',
+            headerName: 'Estoque',
+            type: 'number',
+            width: 110
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 120,
+            renderCell: (params) => (
+                <Chip label={params.value} color={params.value === 'Ativo' ? 'success' : 'error'} variant="outlined" size="small" />
+            ),
+            align: 'center',
+            headerAlign: 'center'
+        },
+        {
+            field: 'actions',
+            type: 'actions',
+            headerName: 'Ações',
+            width: 150,
+            getActions: (params: GridRowParams<Product>) => [
+                <GridActionsCellItem
+                    icon={<EditIcon />}
+                    label="Editar"
+                    onClick={() => handleOpenEditDialog(params.row)}
+                    color="inherit"
+                />,
+                <GridActionsCellItem
+                    icon={<DeleteIcon />}
+                    label="Deletar"
+                    onClick={() => handleOpenConfirmDialog(params.row.id)}
+                    color="inherit"
+                />,
+                <Tooltip title={params.row.status === 'Ativo' ? 'Desativar' : 'Ativar'}>
+                    <GridActionsCellItem
+                        icon={params.row.status === 'Ativo' ? <ToggleOnIcon color="success" /> : <ToggleOffIcon color="error" />}
+                        label={params.row.status === 'Ativo' ? 'Desativar' : 'Ativar'}
+                        onClick={() => handleToggleStatus(params.row)}
+                        color="inherit"
+                    />
+                </Tooltip>
+            ]
+        },
+    ];
 
     const fetchProducts = useCallback(async () => {
         setLoading(true);
@@ -39,10 +121,6 @@ const ProductsPage: React.FC = () => {
         }
         setLoading(false);
     }, []);
-
-    useEffect(() => {
-        fetchProducts();
-    }, [fetchProducts]);
 
     const handleOpenAddDialog = () => {
         setEditingProduct(null);
@@ -127,99 +205,20 @@ const ProductsPage: React.FC = () => {
         }
     }, [editingProduct, fetchProducts]);
 
-    const columns: GridColDef[] = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 90,
-            align: 'center',
-            headerAlign: 'center'
-        },
-        {
-            field: 'sku',
-            headerName: 'SKU',
-            width: 150
-        },
-        {
-            field: 'nome',
-            headerName: 'Nome do Produto',
-            width: 250
-        },
-        {
-            field: 'preco',
-            headerName: 'Preço (R$)',
-            type: 'number',
-            width: 130,
-            valueFormatter: (value: number) => value == null ? '' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-        },
-        {
-            field: 'estoque',
-            headerName: 'Estoque',
-            type: 'number',
-            width: 110
-        },
-        {
-            field: 'status',
-            headerName: 'Status',
-            width: 120,
-            renderCell: (params) => (
-                <Chip label={params.value} color={params.value === 'Ativo' ? 'success' : 'error'} variant="outlined" size="small" />
-            ),
-            align: 'center',
-            headerAlign: 'center'
-        },
-        {
-            field: 'actions',
-            type: 'actions',
-            headerName: 'Ações',
-            width: 150,
-            getActions: (params: GridRowParams<Product>) => [
-                <GridActionsCellItem
-                    icon={<EditIcon />}
-                    label="Editar"
-                    onClick={() => handleOpenEditDialog(params.row)}
-                    color="inherit"
-                />,
-                <GridActionsCellItem
-                    icon={<DeleteIcon />}
-                    label="Deletar"
-                    onClick={() => handleOpenConfirmDialog(params.row.id)}
-                    color="inherit"
-                />,
-                <Tooltip title={params.row.status === 'Ativo' ? 'Desativar' : 'Ativar'}>
-                    <GridActionsCellItem
-                        icon={params.row.status === 'Ativo' ? <ToggleOnIcon color="success" /> : <ToggleOffIcon color="error" />}
-                        label={params.row.status === 'Ativo' ? 'Desativar' : 'Ativar'}
-                        onClick={() => handleToggleStatus(params.row)}
-                        color="inherit"
-                    />
-                </Tooltip>
-            ]
-        },
-    ];
+    useEffect(() => {
+        fetchProducts();
+    }, [fetchProducts]);
 
     return (
-        <Box sx={{ height: 'calc(100vh - 180px)', width: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h4" component="h1">
-                    Produtos
-                </Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog}>
-                    Adicionar Produto
-                </Button>
-            </Box>
-            <DataGrid
+        <Box sx={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+            <CustomDataGrid
+                title="Produtos"
                 rows={products}
                 columns={columns}
                 loading={loading}
-                pageSizeOptions={[5, 10, 50]}
-                disableRowSelectionOnClick
-                showToolbar
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 50 } },
-                    sorting: { sortModel: [{ field: 'id', sort: 'asc' }] },
-                }}
+                onAdd={handleOpenAddDialog}
             />
+
             <ProductFormDialog
                 open={dialogOpen}
                 onClose={handleCloseDialog}

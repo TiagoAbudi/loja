@@ -2,7 +2,6 @@ import React from 'react';
 import { Container, Box, Typography, TextField, Button, Paper, Alert, Link as MuiLink } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import myLogo from '../assets/logo.png';
 
 const ForgotPasswordPage: React.FC = () => {
     const [email, setEmail] = React.useState('');

@@ -6,11 +6,12 @@ import { Outlet, Link as RouterLink, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import SettingsIcon from '@mui/icons-material/Settings';
+// import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import PeopleIcon from '@mui/icons-material/People';
 
 import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
@@ -61,6 +62,14 @@ const DashboardLayout: React.FC = () => {
         >
           <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
           <ListItemText primary="Produtos" />
+        </ListItemButton>
+         <ListItemButton
+          component={RouterLink}
+          to="/clientes"
+          selected={location.pathname === '/clientes'}
+        >
+          <ListItemIcon><PeopleIcon  /></ListItemIcon>
+          <ListItemText primary="Clientes" />
         </ListItemButton>
         {/* <ListItemButton
           component={RouterLink}

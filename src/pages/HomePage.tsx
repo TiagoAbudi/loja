@@ -6,7 +6,8 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { SalesChart } from '../componets/SalesChart';
-import { TopProductsList } from '../componets/TopProductsList';
+import { supabase } from '../supabaseClient';
+import { LatestSalesList } from '../componets/LatestSalesList';
 interface DashboardStats {
     total_produtos: number;
     valor_total_estoque: number;
@@ -55,13 +56,6 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color }) 
     </Paper>
 );
 
-const mockStats: DashboardStats = {
-    total_produtos: 152,
-    valor_total_estoque: 189540.75,
-    produtos_estoque_baixo: 12,
-    produtos_sem_estoque: 5,
-};
-
 const salesData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - i);
@@ -71,29 +65,28 @@ const salesData = Array.from({ length: 7 }, (_, i) => {
     };
 }).reverse();
 
-const topProducts = [
-    { id: 1, name: 'Laptop Gamer Pro', sold: 125 },
-    { id: 2, name: 'Smartphone X Pro', sold: 98 },
-    { id: 3, name: 'Teclado Mecânico RGB', sold: 85 },
-    { id: 4, name: 'Mouse Gamer Sem Fio', sold: 72 },
-    { id: 5, name: 'Monitor 27" 4K', sold: 61 },
-];
-
 export const DashboardPage: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        setLoading(true);
-        const timer = setTimeout(() => {
-            setStats(mockStats);
+        const fetchDashboardStats = async () => {
+            setLoading(true);
+            const { data, error } = await supabase.rpc('get_dashboard_stats');
 
+            if (error) {
+                console.error('Erro ao buscar dados do dashboard:', error);
+                setError('Não foi possível carregar os dados do dashboard.');
+            } else if (data && data.length > 0) {
+                setStats(data[0]);
+            }
             setLoading(false);
-        }, 1000);
+        };
 
-        return () => clearTimeout(timer);
+        fetchDashboardStats();
     }, []);
+
 
     const formattedStockValue = stats ?
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.valor_total_estoque)
@@ -115,7 +108,7 @@ export const DashboardPage: React.FC = () => {
             <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard
-                        title="Total de Produtos"
+                        title="Total de Produtos (Ativos)"
                         value={stats?.total_produtos ?? 0}
                         icon={Inventory2Icon}
                         color="#1976d2"
@@ -151,14 +144,14 @@ export const DashboardPage: React.FC = () => {
 
                 <Grid size={{ xs: 12, lg: 8 }}>
                     <Paper elevation={3} sx={{ p: 2, height: '450px', borderRadius: 2 }}>
-                        <Typography variant="h6">Vendas nos últimos 7 dias (Gráfico)</Typography>
+                        <Typography variant="h6">Vendas nos últimos 7 dias</Typography>
                         <SalesChart data={salesData} />
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, lg: 4 }}>
                     <Paper elevation={3} sx={{ p: 2, height: '450px', borderRadius: 2 }}>
-                        <Typography variant="h6">Produtos mais vendidos (Lista)</Typography>
-                        <TopProductsList products={topProducts} />
+                        <Typography variant="h6">Últimas vendas</Typography>
+                        <LatestSalesList />
                     </Paper>
                 </Grid>
             </Grid>

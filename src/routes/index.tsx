@@ -9,6 +9,7 @@ import DashboardLayout from '../componets/DashboardLayout';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import ProductsPage from '../pages/ProductsPage';
+import CustomersPage from '../pages/CustomersPage';
 
 const ProtectedRoute = ({ session }: { session: Session | null }) => {
     if (!session) {
@@ -35,6 +36,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
                 </Route>
                 <Route path="/produtos" element={<ProtectedRoute session={session} />}>
                     <Route index element={<ProductsPage />} />
+                </Route>
+                <Route path="/clientes" element={<ProtectedRoute session={session} />}>
+                    <Route index element={<CustomersPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>
