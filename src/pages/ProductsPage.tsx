@@ -22,7 +22,7 @@ import { ProductFormDialog } from '../componets/ProductFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
 
-interface Product {
+export interface Product {
     id: number;
     sku: string;
     nome: string;

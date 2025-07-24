@@ -10,6 +10,10 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import ProductsPage from '../pages/ProductsPage';
 import CustomersPage from '../pages/CustomersPage';
+import ContasAPagarPage from '../pages/ContasAPagarPage';
+import ContasAReceberPage from '../pages/ContasAReceberPage';
+import CaixaPage from '../pages/CaixaPage';
+import VendasPage from '../pages/VendasPage';
 
 const ProtectedRoute = ({ session }: { session: Session | null }) => {
     if (!session) {
@@ -39,6 +43,18 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
                 </Route>
                 <Route path="/clientes" element={<ProtectedRoute session={session} />}>
                     <Route index element={<CustomersPage />} />
+                </Route>
+                <Route path="/contas-a-pagar" element={<ProtectedRoute session={session} />}>
+                    <Route index element={<ContasAPagarPage />} />
+                </Route>
+                <Route path="/contas-a-receber" element={<ProtectedRoute session={session} />}>
+                    <Route index element={<ContasAReceberPage />} />
+                </Route>
+                <Route path="/caixa" element={<ProtectedRoute session={session} />}>
+                    <Route index element={<CaixaPage />} />
+                </Route>
+                <Route path="/venda" element={<ProtectedRoute session={session} />}>
+                    <Route index element={<VendasPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

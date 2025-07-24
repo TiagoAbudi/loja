@@ -12,6 +12,10 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PeopleIcon from '@mui/icons-material/People';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import PaidIcon from '@mui/icons-material/Paid';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 
 import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
@@ -64,14 +68,51 @@ const DashboardLayout: React.FC = () => {
           <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
           <ListItemText primary="Produtos" />
         </ListItemButton>
-         <ListItemButton
+        <ListItemButton
           component={RouterLink}
           to="/clientes"
           selected={location.pathname === '/clientes'}
         >
-          <ListItemIcon><PeopleIcon  /></ListItemIcon>
+          <ListItemIcon><PeopleIcon /></ListItemIcon>
           <ListItemText primary="Clientes" />
         </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/contas-a-pagar"
+          selected={location.pathname === '/contas-a-pagar'}
+        >
+          <ListItemIcon><PaymentsIcon /></ListItemIcon>
+          <ListItemText primary="Contas a Pagar" />
+        </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/contas-a-receber"
+          selected={location.pathname === '/contas-a-receber'}
+        >
+          <ListItemIcon><PaidIcon /></ListItemIcon>
+          <ListItemText primary="Contas a Receber" />
+        </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/caixa"
+          selected={location.pathname === '/caixa'}
+        >
+          <ListItemIcon><AccountBalanceWalletIcon /></ListItemIcon>
+          <ListItemText primary="Caixa" />
+        </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/venda"
+          selected={location.pathname === '/venda'}
+        >
+          <ListItemIcon><AddShoppingCartIcon /></ListItemIcon>
+          <ListItemText primary="Venda" />
+        </ListItemButton>
+
         {/* <ListItemButton
           component={RouterLink}
           to="/configuracoes"
