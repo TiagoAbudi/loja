@@ -2,19 +2,12 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Box, Typography, Paper, Grid, Button, Divider, TextField, CircularProgress } from '@mui/material';
 import { supabase } from '../supabaseClient';
 
-// Importando a interface principal de Produto para consistência
 import { Product } from './ProductsPage';
 import { Pagamento, PagamentoDialog } from '../componets/PagamentoDialog';
 import { BuscaProduto } from '../componets/BuscaProduto';
 import { CarrinhoItens } from '../componets/CarrinhoItens';
 import { Link } from 'react-router-dom';
-import { BuscaCliente } from '../componets/BuscaCliente';
-
-// Interfaces específicas da Venda
-interface Cliente {
-    id: number;
-    nome: string;
-}
+import { BuscaCliente, Cliente } from '../componets/BuscaCliente';
 
 interface CarrinhoItem {
     produto_id: number;
@@ -36,7 +29,6 @@ const AvisoCaixaFechado = () => (
 );
 
 const VendasPage: React.FC = () => {
-    // --- ESTADOS DO COMPONENTE ---
     const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]);
     const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
     const [desconto, setDesconto] = useState<number>(0);
@@ -53,52 +45,53 @@ const VendasPage: React.FC = () => {
         verificarCaixa();
     }, []);
 
-    // --- CÁLCULOS AUTOMÁTICOS ---
     const totais = useMemo(() => {
         const valorBruto = carrinho.reduce((acc, item) => acc + item.preco_total, 0);
         const valorLiquido = valorBruto - desconto;
         return { valorBruto, valorLiquido };
     }, [carrinho, desconto]);
 
-    // --- FUNÇÕES DE MANIPULAÇÃO DO CARRINHO ---
     const handleAddItemAoCarrinho = useCallback((produto: Product) => {
-        // Trava de segurança para produtos com preço inválido
-        if (typeof produto.preco !== 'number' || isNaN(Number(produto.preco))) {
+        if (typeof produto.id === 'undefined') {
+            alert("Erro fatal: O produto selecionado não possui um ID. A venda não pode continuar.");
+            return;
+        }
+        const precoNumerico = Number(produto.preco);
+        if (isNaN(precoNumerico)) {
             alert(`O produto "${produto.nome}" está com um preço inválido e não pode ser adicionado à venda.`);
             return;
         }
 
+        const produtoId = produto.id;
+
         setCarrinho(prevCarrinho => {
-            const itemExistente = prevCarrinho.find(item => item.produto_id === produto.id);
+            const itemExistente = prevCarrinho.find(item => item.produto_id === produtoId);
 
             if (itemExistente) {
-                // Se o item já existe, apenas incrementa a quantidade
                 return prevCarrinho.map(item =>
-                    item.produto_id === produto.id
+                    item.produto_id === produtoId
                         ? { ...item, quantidade: item.quantidade + 1, preco_total: (item.quantidade + 1) * item.preco_unitario }
                         : item
                 );
             } else {
-                // Se é um novo item, adiciona ao carrinho com quantidade 1
                 const novoItem: CarrinhoItem = {
-                    produto_id: produto.id,
-                    nome: produto.nome,
+                    produto_id: produtoId,
+                    nome: produto.nome ?? 'Produto sem nome',
                     quantidade: 1,
-                    preco_unitario: Number(produto.preco),
-                    preco_total: Number(produto.preco)
+                    preco_unitario: precoNumerico,
+                    preco_total: precoNumerico
                 };
                 return [...prevCarrinho, novoItem];
             }
         });
     }, []);
 
+
     const handleUpdateQuantidade = useCallback((produtoId: number, novaQuantidade: number) => {
         setCarrinho(prevCarrinho => {
             if (novaQuantidade <= 0) {
-                // Remove o item se a quantidade for 0 ou menor
                 return prevCarrinho.filter(item => item.produto_id !== produtoId);
             }
-            // Atualiza a quantidade e o total do item
             return prevCarrinho.map(item =>
                 item.produto_id === produtoId
                     ? { ...item, quantidade: novaQuantidade, preco_total: novaQuantidade * item.preco_unitario }
@@ -111,21 +104,24 @@ const VendasPage: React.FC = () => {
         setCarrinho(prevCarrinho => prevCarrinho.filter(item => item.produto_id !== produtoId));
     }, []);
 
-    // --- FUNÇÃO PRINCIPAL PARA FINALIZAR A VENDA ---
     const handleFinalizarVenda = async (pagamentos: Pagamento[]) => {
         setPagamentoDialogOpen(false);
         if (!clienteSelecionado) { alert("Selecione um cliente para a venda."); return; }
         if (carrinho.length === 0) { alert("O carrinho está vazio."); return; }
 
-        // 1. Pega ou cria o cliente usando a função do back-end
+        if (!clienteSelecionado || !clienteSelecionado.nome) {
+            alert("Selecione ou digite o nome de um cliente para a venda.");
+            return;
+        }
+
         const { data: clienteId, error: clienteError } = await supabase.rpc('get_or_create_cliente', { nome_cliente: clienteSelecionado.nome });
+
         if (clienteError) {
             console.error("Erro ao buscar/criar cliente:", clienteError);
             alert(`Erro com o cliente: ${clienteError.message}`);
             return;
         }
 
-        // 2. Insere o registro principal da venda
         const { data: vendaData, error: vendaError } = await supabase
             .from('vendas')
             .insert({
@@ -137,7 +133,7 @@ const VendasPage: React.FC = () => {
             })
             .select()
             .single();
-            
+
         if (vendaError) {
             console.error("Erro ao criar venda:", vendaError);
             alert(`Erro ao criar venda: ${vendaError.message}`);
@@ -146,7 +142,6 @@ const VendasPage: React.FC = () => {
 
         const vendaId = vendaData.id;
 
-        // 3. Insere os itens e os pagamentos
         const itensParaInserir = carrinho.map(item => ({
             venda_id: vendaId,
             produto_id: item.produto_id,
@@ -173,7 +168,6 @@ const VendasPage: React.FC = () => {
             return;
         }
 
-        // 4. Lógica para Contas a Receber e Movimentação de Caixa
         for (const pag of pagamentos) {
             if (pag.metodo === 'A Prazo') {
                 const hoje = new Date();
@@ -195,15 +189,14 @@ const VendasPage: React.FC = () => {
                 });
             }
         }
-        
-        // 5. Chama a função do back-end para finalizar e dar baixa no estoque
+
         const { error: rpcError } = await supabase.rpc('finalizar_venda', { id_da_venda: vendaId });
         if (rpcError) {
             console.error("Erro na reta final:", rpcError);
             alert(`Erro ao finalizar venda: ${rpcError.message}`);
             return;
         }
-        
+
         alert("Venda finalizada com sucesso!");
         setCarrinho([]);
         setClienteSelecionado(null);
@@ -215,7 +208,6 @@ const VendasPage: React.FC = () => {
 
     return (
         <Grid container spacing={2} sx={{ p: 2 }}>
-            {/* Coluna da Esquerda: Itens da Venda */}
             <Grid size={{ xs: 12, lg: 7 }}>
                 <Typography variant="h5" gutterBottom>PDV - Ponto de Venda</Typography>
                 <Paper sx={{ p: 2, mb: 2 }}>
@@ -234,7 +226,6 @@ const VendasPage: React.FC = () => {
                 </Paper>
             </Grid>
 
-            {/* Coluna da Direita: Resumo e Finalização */}
             <Grid size={{ xs: 12, lg: 5 }}>
                 <Paper sx={{ p: 2 }}>
                     <Typography variant="h6">Resumo da Venda</Typography>

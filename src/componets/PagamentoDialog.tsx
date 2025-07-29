@@ -1,15 +1,11 @@
-// src/components/PagamentoDialog.tsx
-
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box,
     Select, MenuItem, TextField, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Divider
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// Definindo os tipos pra ficar tudo nos trinques
 export interface Pagamento {
     metodo: 'Dinheiro' | 'Cartão de Crédito' | 'Cartão de Débito' | 'Pix' | 'A Prazo';
     valor: number;
@@ -27,16 +23,14 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
     const [metodoAtual, setMetodoAtual] = useState<'Dinheiro' | 'Cartão de Crédito' | 'Cartão de Débito' | 'Pix' | 'A Prazo'>('Dinheiro');
     const [valorAtual, setValorAtual] = useState('');
 
-    // Limpa tudo quando o dialog abre
     useEffect(() => {
         if (open) {
             setPagamentos([]);
-            setValorAtual(valorTotal.toFixed(2)); // Sugere o valor total no primeiro pagamento
+            setValorAtual(valorTotal.toFixed(2));
             setMetodoAtual('Dinheiro');
         }
     }, [open, valorTotal]);
 
-    // O cérebro que calcula tudo sozinho, só na malandragem!
     const totais = useMemo(() => {
         const valorPago = pagamentos.reduce((acc, pag) => acc + pag.valor, 0);
         const restante = valorTotal - valorPago;
@@ -52,8 +46,7 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
         }
         const novoPagamento: Pagamento = { metodo: metodoAtual, valor: valorNum };
         setPagamentos([...pagamentos, novoPagamento]);
-        
-        // Prepara pro próximo pagamento
+
         const valorRestante = totais.restante - valorNum;
         setValorAtual(valorRestante > 0 ? valorRestante.toFixed(2) : '');
     };
@@ -75,7 +68,6 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
                 </Box>
                 <Divider sx={{ my: 2 }} />
 
-                {/* Formulário pra adicionar pagamento */}
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
                     <Select value={metodoAtual} onChange={(e) => setMetodoAtual(e.target.value as any)} sx={{ flex: 1 }}>
                         <MenuItem value="Dinheiro">Dinheiro</MenuItem>
@@ -97,11 +89,10 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
                     </IconButton>
                 </Box>
 
-                {/* Lista de pagamentos já adicionados */}
                 <Typography variant="subtitle1">Pagamentos Adicionados:</Typography>
                 <List dense>
                     {pagamentos.map((pag, index) => (
-                        <ListItem key={index} sx={{bgcolor: 'action.hover', borderRadius: 1, mb: 0.5}}>
+                        <ListItem key={index} sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 0.5 }}>
                             <ListItemText primary={pag.metodo} secondary={pag.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
                             <ListItemSecondaryAction>
                                 <IconButton edge="end" onClick={() => handleRemovePagamento(index)}>
@@ -113,7 +104,6 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
                 </List>
                 <Divider sx={{ my: 2 }} />
 
-                {/* Resumo final */}
                 <Box sx={{ textAlign: 'right' }}>
                     <Typography>Total Pago: {totais.valorPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Typography>
                     {totais.restante > 0 && <Typography color="error">Falta: {totais.restante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Typography>}
@@ -123,10 +113,10 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Cancelar Venda</Button>
-                <Button 
-                    onClick={() => onFinalizarVenda(pagamentos)} 
-                    variant="contained" 
-                    disabled={totais.restante > 0} // Só habilita quando a conta tá zerada!
+                <Button
+                    onClick={() => onFinalizarVenda(pagamentos)}
+                    variant="contained"
+                    disabled={totais.restante > 0}
                     size="large"
                 >
                     Confirmar Venda

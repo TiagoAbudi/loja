@@ -1,5 +1,3 @@
-// src/components/CarrinhoItens.tsx
-
 import React from 'react';
 import {
     Table,

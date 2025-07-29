@@ -85,15 +85,17 @@ interface CustomDataGridProps<T extends GridValidRowModel> {
     rows: T[];
     columns: GridColDef<T>[];
     loading: boolean;
-    onAdd: () => void;
+    onAdd?: () => void;
+    getRowId?: (row: T) => GridRowId; 
 }
 
-export const CustomDataGrid = <T extends { id: GridRowId }>({
+export const CustomDataGrid = <T extends GridValidRowModel>({
     title,
     rows,
     columns,
     loading,
-    onAdd
+    onAdd,
+    getRowId
 }: CustomDataGridProps<T>) => {
 
     function CustomToolbar() {
@@ -223,13 +225,13 @@ export const CustomDataGrid = <T extends { id: GridRowId }>({
                         )}
                     />
                 </StyledQuickFilter>
-                <Tooltip title={`Adicionar ${title.slice(0, -1)}`}>
+                {onAdd && <Tooltip title={`Adicionar ${title.slice(0, -1)}`}>
                     <ToolbarButton
                         onClick={onAdd}
                     >
                         <AddIcon fontSize="small" />
                     </ToolbarButton>
-                </Tooltip>
+                </Tooltip>}
             </Toolbar>
         );
     }
@@ -244,6 +246,7 @@ export const CustomDataGrid = <T extends { id: GridRowId }>({
                 disableRowSelectionOnClick
                 slots={{ toolbar: CustomToolbar }}
                 showToolbar
+                getRowId={getRowId}
                 initialState={{
                     pagination: { paginationModel: { pageSize: 50 } },
                     sorting: { sortModel: [{ field: 'id', sort: 'asc' }] },

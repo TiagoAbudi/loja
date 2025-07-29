@@ -17,58 +17,45 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
 import ToggleOffIcon from '@mui/icons-material/ToggleOff';
+import { QueryData } from '@supabase/supabase-js';
+
 import { supabase } from '../supabaseClient';
 import { ProductFormDialog } from '../componets/ProductFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
 
-export interface Product {
-    id: number;
-    sku: string;
-    nome: string;
-    preco: number | string;
-    estoque: number | string;
-    status: 'Ativo' | 'Inativo';
-}
+const productsQuery = supabase.from('Produtos').select('*');
+type Products = QueryData<typeof productsQuery>;
+export type Product = Products[number];
+
 
 const ProductsPage: React.FC = () => {
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<Products>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const columns: GridColDef[] = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 90,
-            align: 'center',
-            headerAlign: 'center'
-        },
-        {
-            field: 'sku',
-            headerName: 'SKU',
-            width: 150
-        },
-        {
-            field: 'nome',
-            headerName: 'Nome do Produto',
-            width: 250
-        },
+
+    const columns: GridColDef<Product>[] = [
+        { field: 'id', headerName: 'ID', width: 90, align: 'center', headerAlign: 'center' },
+        { field: 'sku', headerName: 'SKU', width: 150 },
+        { field: 'nome', headerName: 'Nome do Produto', flex: 1, minWidth: 250 },
         {
             field: 'preco',
             headerName: 'Preço (R$)',
             type: 'number',
             width: 130,
-            valueFormatter: (value: number) => value == null ? '' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            valueFormatter: (value: number | null) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
         },
         {
-            field: 'estoque',
-            headerName: 'Estoque',
+            field: 'valor_de_custo',
+            headerName: 'Custo (R$)',
             type: 'number',
-            width: 110
+            width: 130,
+            valueFormatter: (value: number | null) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
         },
+        { field: 'estoque', headerName: 'Estoque', type: 'number', width: 110, align: 'center', headerAlign: 'center' },
         {
             field: 'status',
             headerName: 'Status',
@@ -85,24 +72,13 @@ const ProductsPage: React.FC = () => {
             headerName: 'Ações',
             width: 150,
             getActions: (params: GridRowParams<Product>) => [
-                <GridActionsCellItem
-                    icon={<EditIcon />}
-                    label="Editar"
-                    onClick={() => handleOpenEditDialog(params.row)}
-                    color="inherit"
-                />,
-                <GridActionsCellItem
-                    icon={<DeleteIcon />}
-                    label="Deletar"
-                    onClick={() => handleOpenConfirmDialog(params.row.id)}
-                    color="inherit"
-                />,
+                <GridActionsCellItem icon={<EditIcon />} label="Editar" onClick={() => handleOpenEditDialog(params.row)} />,
+                <GridActionsCellItem icon={<DeleteIcon />} label="Deletar" onClick={() => { if (params.row.id) { handleOpenConfirmDialog(params.row.id) } }} />,
                 <Tooltip title={params.row.status === 'Ativo' ? 'Desativar' : 'Ativar'}>
                     <GridActionsCellItem
                         icon={params.row.status === 'Ativo' ? <ToggleOnIcon color="success" /> : <ToggleOffIcon color="error" />}
                         label={params.row.status === 'Ativo' ? 'Desativar' : 'Ativar'}
                         onClick={() => handleToggleStatus(params.row)}
-                        color="inherit"
                     />
                 </Tooltip>
             ]
@@ -139,11 +115,8 @@ const ProductsPage: React.FC = () => {
 
     const handleDeleteProduct = useCallback(async (productId: number) => {
         const { error } = await supabase.from('Produtos').delete().eq('id', productId);
-        if (error) {
-            console.error('Erro ao deletar produto:', error.message);
-        } else {
-            fetchProducts();
-        }
+        if (error) console.error('Erro ao deletar produto:', error.message);
+        else fetchProducts();
     }, [fetchProducts]);
 
     const handleOpenConfirmDialog = (productId: number) => {
@@ -157,45 +130,30 @@ const ProductsPage: React.FC = () => {
     };
 
     const handleConfirmDelete = () => {
-        if (productToDelete) {
-            handleDeleteProduct(productToDelete);
-        }
+        if (productToDelete) handleDeleteProduct(productToDelete);
         handleCloseConfirmDialog();
     };
 
     const handleToggleStatus = useCallback(async (product: Product) => {
         const newStatus = product.status === 'Ativo' ? 'Inativo' : 'Ativo';
-        const { error } = await supabase
-            .from('Produtos')
-            .update({ status: newStatus })
-            .eq('id', product.id);
+        const { error } = await supabase.from('Produtos').update({ status: newStatus }).eq('id', product.id);
 
-        if (error) {
-            console.error('Erro ao alterar status do produto:', error.message);
-        } else {
-            fetchProducts();
-        }
+        if (error) console.error('Erro ao alterar status:', error.message);
+        else fetchProducts();
     }, [fetchProducts]);
 
-    const handleSaveProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
+    const handleSaveProduct = useCallback(async (productData: Omit<Product, 'id' | 'created_at'>) => {
+
         const dataToSave = {
             ...productData,
-            preco: Number(productData.preco),
-            estoque: Number(productData.estoque),
+            preco: Number(productData.preco) || 0,
+            valor_de_custo: Number(productData.valor_de_custo) || null,
+            estoque: Number(productData.estoque) || 0,
         };
 
-        let error;
-
-        if (editingProduct) {
-            const { error: updateError } = await supabase
-                .from('Produtos')
-                .update(dataToSave)
-                .eq('id', editingProduct.id);
-            error = updateError;
-        } else {
-            const { error: insertError } = await supabase.from('Produtos').insert([dataToSave]);
-            error = insertError;
-        }
+        const { error } = editingProduct ?
+            await supabase.from('Produtos').update(dataToSave).eq('id', editingProduct.id) :
+            await supabase.from('Produtos').insert([dataToSave]);
 
         if (error) {
             console.error('Erro ao salvar produto:', error.message);

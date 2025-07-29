@@ -1,12 +1,8 @@
-// src/components/ContasAPagarFormDialog.tsx
-
 import React, { useState, useEffect } from 'react';
-// 1. Importe os componentes necessários do Material-UI
 import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, MenuItem, FormControl, InputLabel, Select, SelectChangeEvent } from '@mui/material';
 import { ContaAPagar } from '../pages/ContasAPagarPage';
 import { supabase } from '../supabaseClient';
 
-// 2. Defina uma interface para o fornecedor
 interface Fornecedor {
     id: number;
     nome_fantasia: string;
@@ -26,15 +22,13 @@ const emptyConta: ContaFormData = {
     valor: 0,
     data_vencimento: '',
     status: 'Pendente',
-    fornecedor_id: undefined, // Começa como indefinido
+    fornecedor_id: undefined,
 };
 
 export const ContasAPagarFormDialog: React.FC<ContasAPagarFormDialogProps> = ({ open, onClose, onSave, initialData }) => {
     const [conta, setConta] = useState<ContaFormData>(emptyConta);
-    // 3. Crie um estado para armazenar a lista de fornecedores
     const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
 
-    // 4. Efeito para buscar os fornecedores quando o diálogo abrir
     useEffect(() => {
         if (open) {
             const fetchFornecedores = async () => {
@@ -52,13 +46,10 @@ export const ContasAPagarFormDialog: React.FC<ContasAPagarFormDialogProps> = ({ 
     useEffect(() => {
         if (open) {
             if (initialData) {
-                // CORREÇÃO AQUI:
-                // Simplesmente usamos a string de data que vem do banco de dados,
-                // sem convertê-la para um objeto Date e de volta para string.
                 const formData: ContaFormData = {
                     descricao: initialData.descricao,
                     valor: initialData.valor,
-                    data_vencimento: initialData.data_vencimento, // <-- MUDANÇA AQUI
+                    data_vencimento: initialData.data_vencimento,
                     status: initialData.status,
                     fornecedor_id: initialData.fornecedor_id,
                 };
@@ -86,7 +77,6 @@ export const ContasAPagarFormDialog: React.FC<ContasAPagarFormDialogProps> = ({ 
             <DialogContent>
                 <TextField autoFocus margin="dense" name="descricao" label="Descrição" fullWidth value={conta.descricao} onChange={handleChange} required />
 
-                {/* 5. Adicione o campo de seleção para o fornecedor */}
                 <FormControl fullWidth margin="dense">
                     <InputLabel>Fornecedor (Opcional)</InputLabel>
                     <Select

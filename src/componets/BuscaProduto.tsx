@@ -1,21 +1,14 @@
-// src/components/BuscaProduto.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Autocomplete, TextField, CircularProgress, Box, Button } from '@mui/material';
 import { supabase } from '../supabaseClient';
-// 1. IMPORTA A DEFINIÇÃO OFICIAL DE PRODUTO
-import { Product } from '../pages/ProductsPage'; // Ajuste o caminho se precisar
+import { Product } from '../pages/ProductsPage';
 
-// 2. APAGUE A INTERFACE "Produto" QUE ESTAVA AQUI. JÁ ERA!
-
-// A prop agora usa a interface importada 'Product'
 interface BuscaProdutoProps {
     onAddProduto: (produto: Product) => void;
 }
 
 export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
     const [open, setOpen] = useState(false);
-    // O estado agora usa o tipo 'Product'
     const [options, setOptions] = useState<readonly Product[]>([]);
     const [loading, setLoading] = useState(false);
     const [inputValue, setInputValue] = useState('');
@@ -30,10 +23,9 @@ export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
         setLoading(true);
 
         const timer = setTimeout(async () => {
-            // 3. Busca todos os campos pra garantir que o objeto seja do tipo 'Product' completo
             const { data, error } = await supabase
                 .from('Produtos')
-                .select('*') // Busca tudo pra bater com a interface Product
+                .select('*')
                 .ilike('nome', `%${inputValue}%`)
                 .limit(10);
 

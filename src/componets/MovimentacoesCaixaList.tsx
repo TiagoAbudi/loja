@@ -1,5 +1,3 @@
-// src/components/MovimentacoesCaixaList.tsx
-
 import React from 'react';
 import {
     Table,
@@ -9,11 +7,9 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Typography,
-    Box
+    Typography
 } from '@mui/material';
 
-// Definimos a interface para uma única movimentação que o componente espera receber
 interface Movimentacao {
     id: number;
     data_movimentacao: string;

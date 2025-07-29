@@ -1,5 +1,3 @@
-// src/components/MovimentacaoDialog.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from '@mui/material';
 
@@ -16,7 +14,6 @@ export const MovimentacaoDialog: React.FC<MovimentacaoDialogProps> = ({ open, on
     const [valor, setValor] = useState('');
     const [descricao, setDescricao] = useState('');
 
-    // Limpa os campos quando o diálogo é fechado ou o tipo muda
     useEffect(() => {
         if (!open) {
             setValor('');

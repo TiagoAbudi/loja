@@ -1,5 +1,3 @@
-// src/pages/ContasAPagarPage.tsx
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Chip, Tooltip } from '@mui/material';
 import { GridColDef, GridActionsCellItem, GridRowParams, GridRenderCellParams } from '@mui/x-data-grid';
@@ -68,37 +66,27 @@ const ContasAPagarPage: React.FC = () => {
     };
 
     const handleSaveConta = async (contaData: Omit<ContaAPagar, 'id'>) => {
-        // --- INÍCIO DA CORREÇÃO DEFINITIVA DE DATA E STATUS ---
-
-        // 1. Converte a string de data (ex: "2025-07-25") para um objeto Date UTC explícito.
-        // Isso garante que a data seja tratada como meia-noite do dia correto, sem influência do fuso horário local.
         const parts = contaData.data_vencimento.split('-').map(Number);
         const dataVencimentoUTC = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
 
-        // 2. Prepara o objeto de dados final para ser salvo no banco.
         const dadosParaSalvar = {
             ...contaData,
-            // Enviamos a data no formato ISO completo. O Supabase/PostgreSQL saberá como lidar com isso.
             data_vencimento: dataVencimentoUTC.toISOString(),
         };
 
-        // 3. Verifica o status (lógica que já tínhamos, mas agora usando a data UTC).
         const hoje = new Date();
-        hoje.setUTCHours(0, 0, 0, 0); // Compara com o início do dia em UTC
+        hoje.setUTCHours(0, 0, 0, 0);
 
         if (dataVencimentoUTC < hoje && dadosParaSalvar.status === 'Pendente') {
             dadosParaSalvar.status = 'Vencido';
         }
-        // --- FIM DA CORREÇÃO ---
 
 
         let error;
         if (editingConta) {
-            // Usa o objeto com a data corrigida no update
             const { error: updateError } = await supabase.from('contas_a_pagar').update(dadosParaSalvar).eq('id', editingConta.id);
             error = updateError;
         } else {
-            // Usa o objeto com a data corrigida no insert
             const { error: insertError } = await supabase.from('contas_a_pagar').insert([dadosParaSalvar]);
             error = insertError;
         }
@@ -128,7 +116,7 @@ const ContasAPagarPage: React.FC = () => {
             headerName: 'Fornecedor',
             minWidth: 200,
             renderCell: (params: GridRenderCellParams<ContaComFornecedor>) => {
-                return params.row.fornecedores?.nome_fantasia || 'N/A';
+                return params.row.fornecedores?.nome_fantasia || 'Despesa Geral';
             }
         },
         {
@@ -145,16 +133,10 @@ const ContasAPagarPage: React.FC = () => {
             width: 130,
             // CORREÇÃO AQUI
             valueGetter: (value: string | null) => {
-                // 'value' é a string "YYYY-MM-DD" que vem do banco de dados
                 if (!value) return null;
 
-                // 1. Quebramos a string em partes: [2025, 07, 24]
                 const [year, month, day] = value.split('-').map(Number);
 
-                // 2. Criamos o objeto Date usando os componentes numéricos.
-                // Isso força o JavaScript a usar o FUSO HORÁRIO LOCAL do navegador,
-                // criando a data para meia-noite do dia 24 no Brasil.
-                // O mês no construtor do Date é zero-indexado (0-11), por isso `month - 1`.
                 return new Date(year, month - 1, day);
             },
         },

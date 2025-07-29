@@ -7,7 +7,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { SalesChart } from '../componets/SalesChart';
 import { supabase } from '../supabaseClient';
-import { LatestSalesList } from '../componets/LatestSalesList';
+import { LatestSalesList, Sale } from '../componets/LatestSalesList';
 interface DashboardStats {
     total_produtos: number;
     valor_total_estoque: number;
@@ -56,37 +56,64 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color }) 
     </Paper>
 );
 
-const salesData = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    return {
-        name: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        Vendas: Math.floor(Math.random() * 1500) + 500,
-    };
-}).reverse();
-
 export const DashboardPage: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [latestSales, setLatestSales] = useState<Sale[]>([]);
+    const [chartData, setChartData] = useState<{ name: string; Vendas: number }[]>([]);
 
     useEffect(() => {
-        const fetchDashboardStats = async () => {
+        const fetchData = async () => {
             setLoading(true);
-            const { data, error } = await supabase.rpc('get_dashboard_stats');
+            setError(null);
 
-            if (error) {
-                console.error('Erro ao buscar dados do dashboard:', error);
+            const [statsResponse, chartResponse, salesResponse] = await Promise.all([
+                supabase.rpc('get_dashboard_stats'),
+                supabase.rpc('get_vendas_ultimos_7_dias'),
+                supabase
+                    .from('vendas')
+                    .select('id, valor_liquido, data_venda, cliente:Clientes ( nome )')
+                    .eq('status', 'Finalizada')
+                    .order('data_venda', { ascending: false })
+                    .limit(5)
+            ]);
+
+            if (statsResponse.error) {
+                console.error('Erro ao buscar stats:', statsResponse.error);
                 setError('Não foi possível carregar os dados do dashboard.');
-            } else if (data && data.length > 0) {
-                setStats(data[0]);
+            } else if (statsResponse.data) {
+                setStats(statsResponse.data[0]);
             }
+
+            if (chartResponse.error) {
+                console.error("Erro no gráfico:", chartResponse.error);
+            } else if (chartResponse.data) {
+                const formattedChartData = chartResponse.data.map((item: any) => ({
+                    name: item.dia,
+                    Vendas: item.vendas
+                }));
+                setChartData(formattedChartData);
+            }
+
+            if (salesResponse.error) {
+                console.error("Erro nas últimas vendas:", salesResponse.error);
+            } else if (salesResponse.data) {
+                const formattedSales = salesResponse.data.map((sale) => ({
+                    id: sale.id,
+                    customerName: sale.cliente?.nome ?? 'Consumidor Final',
+                    totalValue: sale.valor_liquido,
+                    date: new Date(sale.data_venda),
+                    sellerName: 'Sistema'
+                }));
+                setLatestSales(formattedSales);
+            }
+
             setLoading(false);
         };
 
-        fetchDashboardStats();
+        fetchData();
     }, []);
-
 
     const formattedStockValue = stats ?
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.valor_total_estoque)
@@ -145,13 +172,13 @@ export const DashboardPage: React.FC = () => {
                 <Grid size={{ xs: 12, lg: 8 }}>
                     <Paper elevation={3} sx={{ p: 2, height: '450px', borderRadius: 2 }}>
                         <Typography variant="h6">Vendas nos últimos 7 dias</Typography>
-                        <SalesChart data={salesData} />
+                        <SalesChart data={chartData} />
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, lg: 4 }}>
                     <Paper elevation={3} sx={{ p: 2, height: '450px', borderRadius: 2 }}>
                         <Typography variant="h6">Últimas vendas</Typography>
-                        <LatestSalesList />
+                        <LatestSalesList sales={latestSales} />
                     </Paper>
                 </Grid>
             </Grid>

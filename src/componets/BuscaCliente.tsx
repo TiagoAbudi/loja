@@ -1,11 +1,10 @@
-// src/components/BuscaCliente.tsx
 import React, { useState, useEffect } from 'react';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
 import { supabase } from '../supabaseClient';
 
-interface Cliente {
+export interface Cliente {
     id: number;
-    nome: string;
+    nome: string | null;
 }
 
 interface BuscaClienteProps {
@@ -37,19 +36,23 @@ export const BuscaCliente: React.FC<BuscaClienteProps> = ({ onClienteChange }) =
 
     return (
         <Autocomplete
-            freeSolo // Mágica acontece aqui! Permite digitar valores que não estão na lista.
+            freeSolo
             options={options}
             loading={loading}
             onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
             onChange={(_, value) => {
                 if (typeof value === 'string') {
-                    // Se o usuário digitou um nome novo, criamos um objeto temporário
-                    onClienteChange({ id: 0, nome: value }); // ID 0 significa "novo cliente"
+                    onClienteChange({ id: 0, nome: value }); 
                 } else {
                     onClienteChange(value);
                 }
             }}
-            getOptionLabel={(option) => typeof option === 'string' ? option : option.nome}
+            getOptionLabel={(option) => {
+                if (typeof option === 'string') {
+                    return option;
+                }
+                return option.nome ?? '';
+            }}
             renderInput={(params) => (
                 <TextField
                     {...params}

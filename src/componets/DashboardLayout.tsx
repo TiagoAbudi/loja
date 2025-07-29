@@ -2,11 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
 import { Outlet, Link as RouterLink, useLocation } from 'react-router-dom';
-
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-// import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -16,7 +14,12 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import PaidIcon from '@mui/icons-material/Paid';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-
+import SummarizeIcon from '@mui/icons-material/Summarize';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
+import RecentActorsIcon from '@mui/icons-material/RecentActors';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
+import SsidChartIcon from '@mui/icons-material/SsidChart';
 import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
 import myLogo from '../assets/logo.png';
@@ -70,6 +73,22 @@ const DashboardLayout: React.FC = () => {
         </ListItemButton>
         <ListItemButton
           component={RouterLink}
+          to="/entrada"
+          selected={location.pathname === '/entrada'}
+        >
+          <ListItemIcon><ShoppingBasketIcon /></ListItemIcon>
+          <ListItemText primary="Entrada Produtos" />
+        </ListItemButton>
+        <ListItemButton
+          component={RouterLink}
+          to="/fornecedores"
+          selected={location.pathname === '/fornecedores'}
+        >
+          <ListItemIcon><RecentActorsIcon /></ListItemIcon>
+          <ListItemText primary="Fornecedores" />
+        </ListItemButton>
+        <ListItemButton
+          component={RouterLink}
           to="/clientes"
           selected={location.pathname === '/clientes'}
         >
@@ -113,14 +132,41 @@ const DashboardLayout: React.FC = () => {
           <ListItemText primary="Venda" />
         </ListItemButton>
 
-        {/* <ListItemButton
+        <ListItemButton
           component={RouterLink}
-          to="/configuracoes"
-          selected={location.pathname === '/configuracoes'}
+          to="/relatorio-vendas"
+          selected={location.pathname === '/relatorio-vendas'}
         >
-          <ListItemIcon><SettingsIcon /></ListItemIcon>
-          <ListItemText primary="Configurações" />
-        </ListItemButton> */}
+          <ListItemIcon><SummarizeIcon /></ListItemIcon>
+          <ListItemText primary="Relatório de Vendas" />
+        </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/relatorio-item-cliente"
+          selected={location.pathname === '/relatorio-item-cliente'}
+        >
+          <ListItemIcon><PersonSearchIcon /></ListItemIcon>
+          <ListItemText primary="Relatório de Itens Clientes" />
+        </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/relatorio-compras"
+          selected={location.pathname === '/relatorio-compras'}
+        >
+          <ListItemIcon><ShoppingCartCheckoutIcon /></ListItemIcon>
+          <ListItemText primary="Relatório de Compras" />
+        </ListItemButton>
+
+        <ListItemButton
+          component={RouterLink}
+          to="/relatorio-lucratividade"
+          selected={location.pathname === '/relatorio-lucratividade'}
+        >
+          <ListItemIcon><SsidChartIcon /></ListItemIcon>
+          <ListItemText primary="Relatório Lucratividade" />
+        </ListItemButton>
       </List>
     </>
   );

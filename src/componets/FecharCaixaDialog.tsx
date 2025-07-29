@@ -5,7 +5,7 @@ interface FecharCaixaDialogProps {
     open: boolean;
     onClose: () => void;
     onConfirm: (valorInformado: number) => void;
-    valorCalculado: number; // Recebe o valor que o sistema calculou
+    valorCalculado: number;
 }
 
 export const FecharCaixaDialog: React.FC<FecharCaixaDialogProps> = ({ open, onClose, onConfirm, valorCalculado }) => {

@@ -58,14 +58,15 @@ interface CustomerFormDialogProps {
     initialData?: Customer | null;
 }
 
-const emptyCustomer: CustomerFormData = {
+const emptyCustomer: Omit<Customer, 'id' | 'created_at'> = {
     nome: '',
     email: '',
-    telefone: '',
-    cpf_cnpj: '',
+    telefone: null,
+    cpf_cnpj: null,
     endereco: '',
     status: 'Ativo',
 };
+
 
 export const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
     open,
@@ -78,13 +79,13 @@ export const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
     useEffect(() => {
         if (open) {
             if (initialData) {
-                const formattedPhone = initialData.telefone ? formatarTelefoneDeNumero(Number(initialData.telefone)) : '';
-                setCustomer({ ...initialData, telefone: formattedPhone });
+                const { id, created_at, ...dataToEdit } = initialData;
+                setCustomer(dataToEdit);
             } else {
                 setCustomer(emptyCustomer);
             }
         }
-    }, [open, initialData]);
+    }, [open, initialData]);    
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
         const { name, value } = event.target;
@@ -94,18 +95,11 @@ export const CustomerFormDialog: React.FC<CustomerFormDialogProps> = ({
     const handleSave = () => {
         const customerToSave = {
             ...customer,
-            telefone: customer.telefone.replace(/\D/g, ''),
-            cpf_cnpj: customer.cpf_cnpj.replace(/\D/g, ''),
+            telefone: customer.telefone ? Number(String(customer.telefone).replace(/\D/g, '')) : null,
+            cpf_cnpj: customer.cpf_cnpj ? Number(String(customer.cpf_cnpj).replace(/\D/g, '')) : null,
 
         };
         onSave(customerToSave);
-    };
-
-    const formatarTelefoneDeNumero = (telefone: number): string => {
-        const s = String(telefone);
-        if (s.length === 11) return `(${s.substring(0, 2)}) ${s.substring(2, 7)}-${s.substring(7)}`;
-        if (s.length === 10) return `(${s.substring(0, 2)}) ${s.substring(2, 6)}-${s.substring(6)}`;
-        return s;
     };
 
     return (

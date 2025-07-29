@@ -48,12 +48,11 @@ const CaixaPage: React.FC = () => {
         setCaixaAtual(data);
 
         if (data) {
-            // 2. Ajuste a busca para trazer todos os campos necessários
             const { data: movsData, error: movsError } = await supabase
                 .from('caixa_movimentacoes')
                 .select('id, data_movimentacao, tipo, descricao, valor')
                 .eq('caixa_id', data.id)
-                .order('created_at', { ascending: false }); // Ordena da mais recente para a mais antiga
+                .order('created_at', { ascending: false });
 
             if (movsError) console.error('Erro ao buscar movimentações:', movsError);
             else setMovimentacoes(movsData || []);
@@ -82,7 +81,7 @@ const CaixaPage: React.FC = () => {
 
         if (caixaJaAberto) {
             alert("Já existe um caixa aberto. Por favor, feche o caixa atual antes de abrir um novo.");
-            setAbrirCaixaDialogOpen(false); // Fecha o diálogo
+            setAbrirCaixaDialogOpen(false);
             return;
         }
 
@@ -142,11 +141,9 @@ const CaixaPage: React.FC = () => {
         setMovimentacaoDialogOpen(true);
     };
 
-    // 4. Crie a função para registrar a nova movimentação
     const handleRegistrarMovimentacao = async (dados: { descricao: string; valor: number }) => {
         if (!caixaAtual) return;
 
-        // O valor da Sangria deve ser negativo
         const valorFinal = tipoMovimentacao === 'SANGRIA' ? -Math.abs(dados.valor) : Math.abs(dados.valor);
 
         const { error } = await supabase
@@ -163,7 +160,7 @@ const CaixaPage: React.FC = () => {
             alert(`Falha ao registrar ${tipoMovimentacao}.`);
         } else {
             setMovimentacaoDialogOpen(false);
-            fetchCaixaAberto(); // Recarrega os dados para mostrar a nova movimentação
+            fetchCaixaAberto();
         }
     };
 
