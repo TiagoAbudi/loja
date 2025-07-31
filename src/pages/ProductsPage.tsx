@@ -23,6 +23,7 @@ import { supabase } from '../supabaseClient';
 import { ProductFormDialog } from '../componets/ProductFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
+import { DialogImportData } from '../componets/DialogImportData';
 
 const productsQuery = supabase.from('Produtos').select('*');
 type Products = QueryData<typeof productsQuery>;
@@ -36,6 +37,7 @@ const ProductsPage: React.FC = () => {
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
 
     const columns: GridColDef<Product>[] = [
         { field: 'id', headerName: 'ID', width: 90, align: 'center', headerAlign: 'center' },
@@ -103,6 +105,10 @@ const ProductsPage: React.FC = () => {
         setDialogOpen(true);
     };
 
+    const handleOpenImportDialog = () => {
+        setImportDialogOpen(true);
+    }
+
     const handleOpenEditDialog = (product: Product) => {
         setEditingProduct(product);
         setDialogOpen(true);
@@ -111,6 +117,7 @@ const ProductsPage: React.FC = () => {
     const handleCloseDialog = () => {
         setDialogOpen(false);
         setEditingProduct(null);
+        setImportDialogOpen(false);
     };
 
     const handleDeleteProduct = useCallback(async (productId: number) => {
@@ -175,6 +182,7 @@ const ProductsPage: React.FC = () => {
                 columns={columns}
                 loading={loading}
                 onAdd={handleOpenAddDialog}
+                onImport={handleOpenImportDialog}
             />
 
             <ProductFormDialog
@@ -190,6 +198,12 @@ const ProductsPage: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 title="Confirmar Exclusão"
                 message="Tem certeza de que deseja excluir este produto? Esta ação não pode ser desfeita."
+            />
+
+            <DialogImportData
+                open={importDialogOpen}
+                onClose={handleCloseDialog}
+                onConfirm={(d) => console.log(d)}
             />
         </Box>
     );

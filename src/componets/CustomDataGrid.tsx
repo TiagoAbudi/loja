@@ -42,6 +42,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { ptBR } from '@mui/x-data-grid/locales';
 import CheckIcon from '@mui/icons-material/Check';
 import TableRowsIcon from '@mui/icons-material/TableRows';
+import PublishIcon from '@mui/icons-material/Publish';
 
 type OwnerState = {
     expanded: boolean;
@@ -86,7 +87,8 @@ interface CustomDataGridProps<T extends GridValidRowModel> {
     columns: GridColDef<T>[];
     loading: boolean;
     onAdd?: () => void;
-    getRowId?: (row: T) => GridRowId; 
+    getRowId?: (row: T) => GridRowId;
+    onImport?: () => void;
 }
 
 export const CustomDataGrid = <T extends GridValidRowModel>({
@@ -95,7 +97,8 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
     columns,
     loading,
     onAdd,
-    getRowId
+    getRowId,
+    onImport
 }: CustomDataGridProps<T>) => {
 
     function CustomToolbar() {
@@ -230,6 +233,14 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
                         onClick={onAdd}
                     >
                         <AddIcon fontSize="small" />
+                    </ToolbarButton>
+                </Tooltip>}
+
+                {onImport && <Tooltip title={`Importar`}>
+                    <ToolbarButton
+                        onClick={onImport}
+                    >
+                        <PublishIcon fontSize="small" />
                     </ToolbarButton>
                 </Tooltip>}
             </Toolbar>
