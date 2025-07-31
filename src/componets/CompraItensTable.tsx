@@ -51,7 +51,6 @@ export const CompraItensTable: React.FC<CompraItensTableProps> = ({ items, onUpd
                                 <TextField
                                     type="number"
                                     size="small"
-                                    // CORREÇÃO AQUI
                                     value={item.custo_unitario || ''} 
                                     onChange={(e) => handleCustoChange(item.produto.id, e.target.value)}
                                     sx={{ width: '120px' }}
@@ -62,7 +61,6 @@ export const CompraItensTable: React.FC<CompraItensTableProps> = ({ items, onUpd
                                 <TextField
                                     type="number"
                                     size="small"
-                                    // CORREÇÃO AQUI
                                     value={item.quantidade || ''} 
                                     onChange={(e) => handleQuantidadeChange(item.produto.id, e.target.value)}
                                     sx={{ width: '80px' }}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Grid, Paper, Typography, CircularProgress, Alert, SvgIconTypeMap } from '@mui/material';
+import { Box, Grid, Paper, Typography, CircularProgress, Alert, SvgIconTypeMap, useMediaQuery, useTheme } from '@mui/material';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -8,6 +8,7 @@ import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { SalesChart } from '../componets/SalesChart';
 import { supabase } from '../supabaseClient';
 import { LatestSalesList, Sale } from '../componets/LatestSalesList';
+import { formatCompactNumber, formatCompactCurrency } from '../utils/formatters';
 interface DashboardStats {
     total_produtos: number;
     valor_total_estoque: number;
@@ -62,6 +63,8 @@ export const DashboardPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [latestSales, setLatestSales] = useState<Sale[]>([]);
     const [chartData, setChartData] = useState<{ name: string; Vendas: number }[]>([]);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     useEffect(() => {
         const fetchData = async () => {
@@ -115,9 +118,7 @@ export const DashboardPage: React.FC = () => {
         fetchData();
     }, []);
 
-    const formattedStockValue = stats ?
-        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.valor_total_estoque)
-        : 'R$ 0,00';
+    const formattedStockValue = formatCompactCurrency(stats?.valor_total_estoque ?? 0);
 
     if (loading) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
@@ -136,7 +137,7 @@ export const DashboardPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard
                         title="Total de Produtos (Ativos)"
-                        value={stats?.total_produtos ?? 0}
+                        value={formatCompactNumber(stats?.total_produtos ?? 0)}
                         icon={Inventory2Icon}
                         color="#1976d2"
                     />
@@ -154,7 +155,8 @@ export const DashboardPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard
                         title="Estoque Baixo (<10)"
-                        value={stats?.produtos_estoque_baixo ?? 0}
+                        value={formatCompactNumber(stats?.produtos_estoque_baixo ?? 0)}
+
                         icon={WarningAmberIcon}
                         color="#f57c00"
                     />
@@ -163,7 +165,7 @@ export const DashboardPage: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <StatCard
                         title="Sem Estoque"
-                        value={stats?.produtos_sem_estoque ?? 0}
+                        value={formatCompactNumber(stats?.produtos_sem_estoque ?? 0)}
                         icon={ReportProblemIcon}
                         color="#d32f2f"
                     />
@@ -176,7 +178,7 @@ export const DashboardPage: React.FC = () => {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, lg: 4 }}>
-                    <Paper elevation={3} sx={{ p: 2, height: '450px', borderRadius: 2 }}>
+                    <Paper elevation={3} sx={{ p: 2, height: isMobile ? '550px' : '450px', borderRadius: 2 }}>
                         <Typography variant="h6">Últimas vendas</Typography>
                         <LatestSalesList sales={latestSales} />
                     </Paper>

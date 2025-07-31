@@ -1,4 +1,3 @@
-// src/pages/RelatorioLucratividadePage.tsx
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Box, Paper, Typography, Grid, TextField, Button } from '@mui/material';
 import { GridColDef } from '@mui/x-data-grid';

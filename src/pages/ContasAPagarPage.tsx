@@ -131,7 +131,6 @@ const ContasAPagarPage: React.FC = () => {
             headerName: 'Vencimento',
             type: 'date',
             width: 130,
-            // CORREÇÃO AQUI
             valueGetter: (value: string | null) => {
                 if (!value) return null;
 

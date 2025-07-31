@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
+import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, ListSubheader } from '@mui/material';
 import { Outlet, Link as RouterLink, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -24,7 +24,7 @@ import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
 import myLogo from '../assets/logo.png';
 
-const drawerWidth = 240;
+const drawerWidth = 300;
 
 const DashboardLayout: React.FC = () => {
   const location = useLocation();
@@ -51,125 +51,66 @@ const DashboardLayout: React.FC = () => {
     await supabase.auth.signOut();
   };
 
+  const menuSections = [
+    {
+      items: [
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+        { text: 'Venda', icon: <AddShoppingCartIcon />, path: '/venda' },
+      ]
+    },
+    {
+      title: 'Cadastros',
+      items: [
+        { text: 'Produtos', icon: <ShoppingCartIcon />, path: '/produtos' },
+        { text: 'Entrada Produtos', icon: <ShoppingBasketIcon />, path: '/entrada' },
+        { text: 'Fornecedores', icon: <RecentActorsIcon />, path: '/fornecedores' },
+        { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
+      ]
+    },
+    {
+      title: 'Financeiro',
+      items: [
+        { text: 'Contas a Pagar', icon: <PaymentsIcon />, path: '/contas-a-pagar' },
+        { text: 'Contas a Receber', icon: <PaidIcon />, path: '/contas-a-receber' },
+        { text: 'Caixa', icon: <AccountBalanceWalletIcon />, path: '/caixa' },
+      ]
+    },
+    {
+      title: 'Relatórios',
+      items: [
+        { text: 'Relatório de Vendas', icon: <SummarizeIcon />, path: '/relatorio-vendas' },
+        { text: 'Relatório de Compras', icon: <ShoppingCartCheckoutIcon />, path: '/relatorio-compras' },
+        { text: 'Relatório Itens Clientes', icon: <PersonSearchIcon />, path: '/relatorio-item-cliente' },
+        { text: 'Relatório Lucratividade', icon: <SsidChartIcon />, path: '/relatorio-lucratividade' },
+      ]
+    }
+  ];
+
   const drawerContent = (
     <>
       <Divider />
       <List component="nav">
-        <ListItemButton
-          component={RouterLink}
-          to="/"
-          selected={location.pathname === '/'}
-        >
-          <ListItemIcon><DashboardIcon /></ListItemIcon>
-          <ListItemText primary="Dashboard" />
-        </ListItemButton>
-        <ListItemButton
-          component={RouterLink}
-          to="/produtos"
-          selected={location.pathname === '/produtos'}
-        >
-          <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
-          <ListItemText primary="Produtos" />
-        </ListItemButton>
-        <ListItemButton
-          component={RouterLink}
-          to="/entrada"
-          selected={location.pathname === '/entrada'}
-        >
-          <ListItemIcon><ShoppingBasketIcon /></ListItemIcon>
-          <ListItemText primary="Entrada Produtos" />
-        </ListItemButton>
-        <ListItemButton
-          component={RouterLink}
-          to="/fornecedores"
-          selected={location.pathname === '/fornecedores'}
-        >
-          <ListItemIcon><RecentActorsIcon /></ListItemIcon>
-          <ListItemText primary="Fornecedores" />
-        </ListItemButton>
-        <ListItemButton
-          component={RouterLink}
-          to="/clientes"
-          selected={location.pathname === '/clientes'}
-        >
-          <ListItemIcon><PeopleIcon /></ListItemIcon>
-          <ListItemText primary="Clientes" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/contas-a-pagar"
-          selected={location.pathname === '/contas-a-pagar'}
-        >
-          <ListItemIcon><PaymentsIcon /></ListItemIcon>
-          <ListItemText primary="Contas a Pagar" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/contas-a-receber"
-          selected={location.pathname === '/contas-a-receber'}
-        >
-          <ListItemIcon><PaidIcon /></ListItemIcon>
-          <ListItemText primary="Contas a Receber" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/caixa"
-          selected={location.pathname === '/caixa'}
-        >
-          <ListItemIcon><AccountBalanceWalletIcon /></ListItemIcon>
-          <ListItemText primary="Caixa" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/venda"
-          selected={location.pathname === '/venda'}
-        >
-          <ListItemIcon><AddShoppingCartIcon /></ListItemIcon>
-          <ListItemText primary="Venda" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/relatorio-vendas"
-          selected={location.pathname === '/relatorio-vendas'}
-        >
-          <ListItemIcon><SummarizeIcon /></ListItemIcon>
-          <ListItemText primary="Relatório de Vendas" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/relatorio-item-cliente"
-          selected={location.pathname === '/relatorio-item-cliente'}
-        >
-          <ListItemIcon><PersonSearchIcon /></ListItemIcon>
-          <ListItemText primary="Relatório de Itens Clientes" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/relatorio-compras"
-          selected={location.pathname === '/relatorio-compras'}
-        >
-          <ListItemIcon><ShoppingCartCheckoutIcon /></ListItemIcon>
-          <ListItemText primary="Relatório de Compras" />
-        </ListItemButton>
-
-        <ListItemButton
-          component={RouterLink}
-          to="/relatorio-lucratividade"
-          selected={location.pathname === '/relatorio-lucratividade'}
-        >
-          <ListItemIcon><SsidChartIcon /></ListItemIcon>
-          <ListItemText primary="Relatório Lucratividade" />
-        </ListItemButton>
+        {menuSections.map((section, index) => (
+          <React.Fragment key={section.title || `section-${index}`}>
+            {section.title && <ListSubheader component="div">{section.title}</ListSubheader>}
+            {section.items.map((item) => (
+              <ListItemButton
+                key={item.text}
+                component={RouterLink}
+                to={item.path}
+                selected={location.pathname === item.path}
+                onClick={handleDrawerClose}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            ))}
+          </React.Fragment>
+        ))}
       </List>
     </>
   );
+
 
   return (
     <Box sx={{ display: 'flex' }}>
