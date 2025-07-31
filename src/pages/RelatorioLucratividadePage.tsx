@@ -99,6 +99,7 @@ const RelatorioLucratividadePage: React.FC = () => {
                     columns={columns}
                     getRowId={(row) => row.id_venda}
                     loading={loading}
+                    columnSort='id_venda'
                 />
             </Paper>
         </Box>

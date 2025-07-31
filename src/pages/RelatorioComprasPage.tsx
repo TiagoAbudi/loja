@@ -136,6 +136,7 @@ const RelatorioComprasPage: React.FC = () => {
                     rows={contasPagas}
                     columns={columns}
                     loading={loading}
+                    columnSort='data_pagamento'
                 />
             </Paper>
         </Box>

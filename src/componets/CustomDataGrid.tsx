@@ -89,6 +89,7 @@ interface CustomDataGridProps<T extends GridValidRowModel> {
     onAdd?: () => void;
     getRowId?: (row: T) => GridRowId;
     onImport?: () => void;
+    columnSort?: string;
 }
 
 export const CustomDataGrid = <T extends GridValidRowModel>({
@@ -98,7 +99,8 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
     loading,
     onAdd,
     getRowId,
-    onImport
+    onImport,
+    columnSort
 }: CustomDataGridProps<T>) => {
 
     function CustomToolbar() {
@@ -260,7 +262,7 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
                 getRowId={getRowId}
                 initialState={{
                     pagination: { paginationModel: { pageSize: 50 } },
-                    sorting: { sortModel: [{ field: 'id', sort: 'asc' }] },
+                    sorting: { sortModel: [{ field: columnSort ?? 'id', sort: 'desc' }] },
                 }}
                 localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
             />

@@ -114,7 +114,7 @@ const ContasAReceberPage: React.FC = () => {
 
     return (
         <Box>
-            <CustomDataGrid title="Contas a Receber" rows={contas} columns={columns} loading={loading} onAdd={handleOpenAddDialog} />
+            <CustomDataGrid title="Contas a Receber" rows={contas} columns={columns} loading={loading} onAdd={handleOpenAddDialog} columnSort='data_vencimento' />
             <ContasAReceberFormDialog open={dialogOpen} onClose={handleCloseDialog} onSave={handleSaveConta} initialData={editingConta} />
         </Box>
     );

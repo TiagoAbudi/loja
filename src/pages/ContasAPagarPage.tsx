@@ -180,6 +180,7 @@ const ContasAPagarPage: React.FC = () => {
                 columns={columns}
                 loading={loading}
                 onAdd={handleOpenAddDialog}
+                columnSort='data_vencimento'
             />
             <ContasAPagarFormDialog
                 open={dialogOpen}

@@ -127,6 +127,7 @@ const RelatorioItensPorClientePage: React.FC = () => {
                     rows={itens}
                     columns={columns}
                     loading={loading}
+                    columnSort='venda_id'
                 />
             </Paper>
         </Box>
