@@ -170,6 +170,19 @@ const ProductsPage: React.FC = () => {
         }
     }, [editingProduct, fetchProducts]);
 
+    const mapearDadosProduto = (row: any) => {
+        if (!row['Nome do Produto']) return null;
+        return {
+            sku: row['SKU'],
+            nome: row['Nome do Produto'],
+            preco: Number(String(row['Preço (R$)']).replace('R$', '').replace(/\./g, '').replace(',', '.').trim()),
+            valor_de_custo: Number(String(row['Custo (R$)']).replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || null,
+            estoque: Number(row['Estoque']),
+            status: row['Status']
+        };
+    };
+
+
     useEffect(() => {
         fetchProducts();
     }, [fetchProducts]);
@@ -203,7 +216,14 @@ const ProductsPage: React.FC = () => {
             <DialogImportData
                 open={importDialogOpen}
                 onClose={handleCloseDialog}
-                onConfirm={(d) => console.log(d)}
+                title='Produtos'
+                tableName='Produtos'
+                csvExemplo='Nome do Produto,SKU,Preço (R$),Custo (R$),Estoque,Status'
+                mapeamentoColunas={mapearDadosProduto}
+                onImportSuccess={() => {
+                    fetchProducts();
+                    handleCloseDialog();
+                }}
             />
         </Box>
     );

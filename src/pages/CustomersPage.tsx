@@ -22,11 +22,13 @@ import { supabase } from '../supabaseClient';
 import { CustomerFormDialog } from '../componets/CustomerFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
+import { DialogImportData } from '../componets/DialogImportData';
 
 const customersQuery = supabase.from('Clientes').select('*');
-type Customers = QueryData<typeof customersQuery>;
-export type Customer = Customers[number];
 
+type Customers = QueryData<typeof customersQuery>;
+
+export type Customer = Customers[number];
 
 export const CustomersPage: React.FC = () => {
     const [customers, setCustomers] = useState<Customers>([]);
@@ -35,11 +37,27 @@ export const CustomersPage: React.FC = () => {
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [customerToDelete, setCustomerToDelete] = useState<number | null>(null);
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
 
     const columns: GridColDef<Customer>[] = [
-        { field: 'id', headerName: 'ID', width: 90, align: 'center', headerAlign: 'center' },
-        { field: 'nome', headerName: 'Nome', flex: 1, minWidth: 250 },
-        { field: 'email', headerName: 'E-mail', width: 220 },
+        {
+            field: 'id',
+            headerName: 'ID',
+            width: 90,
+            align: 'center',
+            headerAlign: 'center'
+        },
+        {
+            field: 'nome',
+            headerName: 'Nome',
+            flex: 1,
+            minWidth: 250
+        },
+        {
+            field: 'email',
+            headerName: 'E-mail',
+            width: 220
+        },
         {
             field: 'telefone',
             headerName: 'Telefone',
@@ -53,7 +71,11 @@ export const CustomersPage: React.FC = () => {
             },
         },
         {
-            field: 'status', headerName: 'Status', width: 120, align: 'center', headerAlign: 'center',
+            field: 'status',
+            headerName: 'Status',
+            width: 120,
+            align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => (<Chip label={params.value} color={params.value === 'Ativo' ? 'success' : 'error'} variant="outlined" size="small" />),
         },
         {
@@ -88,9 +110,26 @@ export const CustomersPage: React.FC = () => {
         setLoading(false);
     }, []);
 
-    const handleOpenAddDialog = () => { setEditingCustomer(null); setDialogOpen(true); };
-    const handleOpenEditDialog = (customer: Customer) => { setEditingCustomer(customer); setDialogOpen(true); };
-    const handleCloseDialog = () => { setDialogOpen(false); setEditingCustomer(null); };
+    const handleOpenAddDialog = () => {
+        setEditingCustomer(null);
+        setDialogOpen(true);
+    };
+
+    const handleOpenImportDialog = () => {
+        setImportDialogOpen(true);
+    }
+
+    const handleOpenEditDialog = (customer: Customer) => {
+        setEditingCustomer(customer);
+        setDialogOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setDialogOpen(false);
+        setEditingCustomer(null);
+        setImportDialogOpen(false);
+    };
+
     const handleSaveCustomer = useCallback(async (customerData: Omit<Customer, 'id' | 'created_at'>) => {
         let error;
         if (editingCustomer) {
@@ -98,11 +137,25 @@ export const CustomersPage: React.FC = () => {
         } else {
             ({ error } = await supabase.from('Clientes').insert([customerData]));
         }
-        if (error) { console.error('Erro ao salvar cliente:', error.message); }
-        else { handleCloseDialog(); fetchCustomers(); }
+
+        if (error) {
+            console.error('Erro ao salvar cliente:', error.message);
+        } else {
+            handleCloseDialog();
+            fetchCustomers();
+        }
     }, [editingCustomer, fetchCustomers]);
-    const handleOpenConfirmDialog = (id: number) => { setCustomerToDelete(id); setConfirmOpen(true); };
-    const handleCloseConfirmDialog = () => { setCustomerToDelete(null); setConfirmOpen(false); };
+
+    const handleOpenConfirmDialog = (id: number) => {
+        setCustomerToDelete(id);
+        setConfirmOpen(true);
+    };
+
+    const handleCloseConfirmDialog = () => {
+        setCustomerToDelete(null);
+        setConfirmOpen(false);
+    };
+
     const handleConfirmDelete = useCallback(async () => {
         if (customerToDelete) {
             const { error } = await supabase.from('Clientes').delete().eq('id', customerToDelete);
@@ -111,14 +164,30 @@ export const CustomersPage: React.FC = () => {
         }
         handleCloseConfirmDialog();
     }, [customerToDelete, fetchCustomers]);
+
     const handleToggleStatus = useCallback(async (customer: Customer) => {
         const newStatus = customer.status === 'Ativo' ? 'Inativo' : 'Ativo';
         const { error } = await supabase.from('Clientes').update({ status: newStatus }).eq('id', customer.id);
-        if (error) { console.error('Erro ao alterar status do cliente:', error.message); }
-        else { fetchCustomers(); }
+        if (error) {
+            console.error('Erro ao alterar status do cliente:', error.message);
+        } else {
+            fetchCustomers();
+        }
     }, [fetchCustomers]);
 
-    useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
+    const mapearDadosCliente = (row: any) => {
+        if (!row['Nome']) return null;
+        return {
+            nome: row['Nome'],
+            email: row['E-mail'],
+            telefone: row['Telefone'],
+            status: row['Status']
+        };
+    };
+
+    useEffect(() => {
+        fetchCustomers();
+    }, [fetchCustomers]);
 
     return (
         <Box sx={{ height: 'calc(100vh - 100px)', width: '100%' }}>
@@ -128,19 +197,35 @@ export const CustomersPage: React.FC = () => {
                 columns={columns}
                 loading={loading}
                 onAdd={handleOpenAddDialog}
+                onImport={handleOpenImportDialog}
             />
+
             <CustomerFormDialog
                 open={dialogOpen}
                 onClose={handleCloseDialog}
                 onSave={handleSaveCustomer}
                 initialData={editingCustomer}
             />
+
             <ConfirmationDialog
                 open={confirmOpen}
                 onClose={handleCloseConfirmDialog}
                 onConfirm={handleConfirmDelete}
                 title="Confirmar Exclusão"
                 message="Tem certeza de que deseja excluir este cliente? Esta ação não pode ser desfeita."
+            />
+
+            <DialogImportData
+                open={importDialogOpen}
+                onClose={handleCloseDialog}
+                title='Clientes'
+                tableName='Clientes'
+                csvExemplo='Nome,E-mail,Telefone,Status'
+                mapeamentoColunas={mapearDadosCliente}
+                onImportSuccess={() => {
+                    fetchCustomers();
+                    handleCloseDialog();
+                }}
             />
         </Box>
     );
