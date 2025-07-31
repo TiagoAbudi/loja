@@ -104,12 +104,23 @@ export function ImportadorDeRegistros<T extends TableName>({
 
             <Box onClick={handleBoxClick} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
                 sx={{
-                    display: "flex", flexDirection: 'column', justifyContent: "center", alignItems: "center",
-                    p: 3, gap: 1, borderRadius: 2, border: "2px dashed", borderColor: 'divider',
-                    backgroundColor: isOver ? 'action.hover' : 'transparent', cursor: 'pointer',
-                    transition: (theme) => theme.transitions.create('background-color', {
-                        duration: theme.transitions.duration.short,
-                    }),
+                    display: "flex",
+                    flexDirection: 'column',
+                    justifyContent: "center",
+                    alignItems: "center",
+                    p: 3,
+                    gap: 1,
+                    borderRadius: 2,
+                    border: "2px dashed",
+                    borderColor: 'divider',
+                    backgroundColor: isOver ?
+                        'action.hover' :
+                        'transparent',
+                    cursor: 'pointer',
+                    transition: (theme) =>
+                        theme.transitions.create('background-color', {
+                            duration: theme.transitions.duration.short,
+                        }),
                 }}>
                 <input type="file" ref={inputRef} onChange={handleFileInputChange} accept=".csv" style={{ display: 'none' }} />
                 <UploadFileIcon sx={{ fontSize: 40, color: 'text.secondary' }} />

@@ -185,6 +185,10 @@ export const CustomersPage: React.FC = () => {
         };
     };
 
+    const CABECALHOS_CLIENTES = "Nome,E-mail,Telefone,Status";
+
+    const EXEMPLO_LINHA_CLIENTES = `Ana Silva Reis,ana.silva@example.com,44998765432,Ativo`;
+
     useEffect(() => {
         fetchCustomers();
     }, [fetchCustomers]);
@@ -220,7 +224,8 @@ export const CustomersPage: React.FC = () => {
                 onClose={handleCloseDialog}
                 title='Clientes'
                 tableName='Clientes'
-                csvExemplo='Nome,E-mail,Telefone,Status'
+                csvExemplo={CABECALHOS_CLIENTES}
+                exemploLinhaCsv={EXEMPLO_LINHA_CLIENTES}
                 mapeamentoColunas={mapearDadosCliente}
                 onImportSuccess={() => {
                     fetchCustomers();

@@ -182,6 +182,9 @@ const ProductsPage: React.FC = () => {
         };
     };
 
+    const CABECALHOS_PRODUTOS = "SKU,Nome do Produto,Preço (R$),Custo (R$),Estoque,Status";
+
+    const EXEMPLO_LINHA_PRODUTOS = `LP-001,"Laptop Gamer Pro","R$ 8.000,00","R$ 7.500,00",10,Ativo`;
 
     useEffect(() => {
         fetchProducts();
@@ -218,7 +221,8 @@ const ProductsPage: React.FC = () => {
                 onClose={handleCloseDialog}
                 title='Produtos'
                 tableName='Produtos'
-                csvExemplo='Nome do Produto,SKU,Preço (R$),Custo (R$),Estoque,Status'
+                csvExemplo={CABECALHOS_PRODUTOS}
+                exemploLinhaCsv={EXEMPLO_LINHA_PRODUTOS} 
                 mapeamentoColunas={mapearDadosProduto}
                 onImportSuccess={() => {
                     fetchProducts();
