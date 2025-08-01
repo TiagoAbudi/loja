@@ -20,6 +20,7 @@ import RelatorioComprasPage from '../pages/RelatorioComprasPage';
 import FornecedoresPage from '../pages/FornecedoresPage';
 import EntradaProdutosPage from '../pages/EntradaProdutosPage';
 import RelatorioLucratividadePage from '../pages/RelatorioLucratividadePage';
+import NotasFiscaisPage from '../pages/NotasFiscaisPage';
 
 const ProtectedRoute = ({ session }: { session: Session | null }) => {
     if (!session) {
@@ -79,6 +80,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
                 </Route>
                 <Route path="/relatorio-lucratividade" element={<ProtectedRoute session={session} />}>
                     <Route index element={<RelatorioLucratividadePage />} />
+                </Route>
+                  <Route path="/notas-fiscais" element={<ProtectedRoute session={session} />}>
+                    <Route index element={<NotasFiscaisPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

@@ -23,6 +23,7 @@ import SsidChartIcon from '@mui/icons-material/SsidChart';
 import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
 import myLogo from '../assets/logo.png';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 const drawerWidth = 300;
 
@@ -73,6 +74,12 @@ const DashboardLayout: React.FC = () => {
         { text: 'Contas a Pagar', icon: <PaymentsIcon />, path: '/contas-a-pagar' },
         { text: 'Contas a Receber', icon: <PaidIcon />, path: '/contas-a-receber' },
         { text: 'Caixa', icon: <AccountBalanceWalletIcon />, path: '/caixa' },
+      ]
+    },
+    {
+      title: 'Fiscal',
+      items: [
+        { text: 'Notas Fiscais (NF-e)', icon: <ReceiptLongIcon />, path: '/notas-fiscais' },
       ]
     },
     {

@@ -57,6 +57,34 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({ open, onCl
     useEffect(() => {
         if (open) {
             setLoadingFornecedores(true);
+            const fetchFornecedores = async () => {
+                const { data, error } = await supabase
+                    .from('fornecedores')
+                    .select('id, nome_fantasia');
+
+                if (error) {
+                    console.error("Erro ao buscar fornecedores:", error);
+                } else if (data) {
+                    setFornecedores(data);
+                }
+                setLoadingFornecedores(false);
+            };
+
+            fetchFornecedores();
+        }
+    }, [open]);
+
+    useEffect(() => {
+        if (initialData) {
+            setProduct(initialData);
+        } else {
+            setProduct(initialProductState);
+        }
+    }, [initialData, open]);
+
+    useEffect(() => {
+        if (open) {
+            setLoadingFornecedores(true);
             supabase.from('fornecedores').select('id, nome_fantasia').eq('status', 'Ativo')
                 .then(({ data }) => {
                     setFornecedores(data || []);
@@ -74,6 +102,14 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({ open, onCl
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<any>) => {
         const { name, value } = event.target;
         setProduct({ ...product, [name as string]: value });
+    };
+
+    const handleChangeSelect = (event: SelectChangeEvent<number | string>) => {
+        const { name, value } = event.target;
+        setProduct(prev => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
     const handleSaveClick = () => {
@@ -102,21 +138,19 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({ open, onCl
                 <FormControl fullWidth>
                     <InputLabel id="fornecedor-select-label">Fornecedor</InputLabel>
                     <Select
-                        labelId="fornecedor-select-label"
-                        id="fornecedor-select"
                         name="fornecedor_id"
+                        labelId="fornecedor-select-label"
                         value={product.fornecedor_id || ''}
                         label="Fornecedor"
-                        onChange={handleInputChange}
+                        onChange={handleChangeSelect}
                     >
-                        {loadingFornecedores
-                            ? <MenuItem disabled><CircularProgress size={20} /></MenuItem>
-                            : fornecedores.map(f => (
-                                <MenuItem key={f.id} value={f.id}>{f.nome_fantasia}</MenuItem>
-                            ))
-                        }
+                        <MenuItem value=""><em>Nenhum</em></MenuItem>
+                        {fornecedores.map((fornecedor) => (
+                            <MenuItem key={fornecedor.id} value={fornecedor.id}>
+                                {fornecedor.nome_fantasia}
+                            </MenuItem>
+                        ))}
                     </Select>
-                    <FormHelperText>Opcional</FormHelperText>
                 </FormControl>
 
                 <TextField name="estoque" label="Estoque" type="number" fullWidth value={product.estoque || ''} onChange={handleInputChange} required />

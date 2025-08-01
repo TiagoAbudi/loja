@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Box, Paper, Typography, Grid, TextField, Button } from '@mui/material';
+import { Box, Paper, Typography, Grid, TextField, Button, IconButton } from '@mui/material';
 import { GridColDef, GridActionsCellItem, GridRowParams } from '@mui/x-data-grid';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { supabase } from '../supabaseClient';
 import { VendaDetalhesDialog } from '../componets/VendaDetalhesDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
 import { QueryData } from '@supabase/supabase-js';
+import { DialogEmissaoNFe } from '../componets/DialogEmissaoNFe';
 
 const vendasQuery = supabase
     .from('vendas')
@@ -35,7 +37,8 @@ const RelatorioVendasPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [dataInicio, setDataInicio] = useState(getPrimeiroDiaDoMes());
     const [dataFim, setDataFim] = useState(getHoje());
-
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedVendaId, setSelectedVendaId] = useState<number | null>(null);
     const [vendaSelecionada, setVendaSelecionada] = useState<Venda | null>(null);
     const [detalhesOpen, setDetalhesOpen] = useState(false);
 
@@ -74,6 +77,21 @@ const RelatorioVendasPage: React.FC = () => {
         setDetalhesOpen(true);
     };
 
+    const handleAbrirModalEmissao = (vendaId: number) => {
+        setSelectedVendaId(vendaId);
+        setModalOpen(true);
+    };
+
+    const handleFecharModal = () => {
+        setModalOpen(false);
+        setSelectedVendaId(null);
+    };
+
+    const handleEmissaoSucesso = () => {
+        console.log("NF-e emitida! Atualizar a lista de vendas.");
+    };
+
+
     const columns: GridColDef<Venda>[] = [
         { field: 'id', headerName: 'ID Venda', width: 90 },
         {
@@ -108,6 +126,27 @@ const RelatorioVendasPage: React.FC = () => {
                     onClick={() => handleVerDetalhes(params.row)}
                 />
             ]
+        },
+        {
+            field: 'notas',
+            headerName: 'Notas',
+            width: 100,
+            sortable: false,
+            renderCell: (params) => {
+                const venda = params.row;
+
+                if (venda.status_nfe !== 'emitida') {
+                    return (
+                        <IconButton
+                            title="Emitir NF-e para esta venda"
+                            onClick={() => handleAbrirModalEmissao(venda.id)}
+                        >
+                            <ReceiptLongIcon />
+                        </IconButton>
+                    );
+                }
+                return null;
+            },
         }
     ];
 
@@ -168,6 +207,13 @@ const RelatorioVendasPage: React.FC = () => {
                 venda={vendaSelecionada}
                 open={detalhesOpen}
                 onClose={() => setDetalhesOpen(false)}
+            />
+
+            <DialogEmissaoNFe
+                open={modalOpen}
+                onClose={handleFecharModal}
+                vendaId={selectedVendaId}
+                onSuccess={handleEmissaoSucesso}
             />
         </Box>
     );
