@@ -34,7 +34,10 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link --project-ref bhkgrdaitjmmcqxbpivj",
+    "supabase:types": "supabase gen types typescript --linked > src/lib/database.types.ts"
   },
   "eslintConfig": {
     "extends": [

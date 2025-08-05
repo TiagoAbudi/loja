@@ -9,6 +9,8 @@ import { SalesChart } from '../componets/SalesChart';
 import { supabase } from '../supabaseClient';
 import { LatestSalesList, Sale } from '../componets/LatestSalesList';
 import { formatCompactNumber, formatCompactCurrency } from '../utils/formatters';
+import { TooltipStatCard } from '../componets/TooltipStatCard';
+
 interface DashboardStats {
     total_produtos: number;
     valor_total_estoque: number;
@@ -153,17 +155,18 @@ export const DashboardPage: React.FC = () => {
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <StatCard
+                    <TooltipStatCard
+                        fetchType="low-stock"
                         title="Estoque Baixo (<10)"
                         value={formatCompactNumber(stats?.produtos_estoque_baixo ?? 0)}
-
                         icon={WarningAmberIcon}
                         color="#f57c00"
                     />
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <StatCard
+                    <TooltipStatCard
+                        fetchType="out-of-stock"
                         title="Sem Estoque"
                         value={formatCompactNumber(stats?.produtos_sem_estoque ?? 0)}
                         icon={ReportProblemIcon}

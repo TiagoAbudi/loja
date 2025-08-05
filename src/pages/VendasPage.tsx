@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Box, Typography, Paper, Grid, Button, Divider, TextField, CircularProgress } from '@mui/material';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { Box, Typography, Paper, Grid, Button, Divider, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { supabase } from '../supabaseClient';
 
 import { Product } from './ProductsPage';
 import { Pagamento, PagamentoDialog } from '../componets/PagamentoDialog';
 import { BuscaProduto } from '../componets/BuscaProduto';
 import { CarrinhoItens } from '../componets/CarrinhoItens';
-import { Link } from 'react-router-dom';
+import { Link, useBlocker } from 'react-router-dom';
 import { BuscaCliente, Cliente } from '../componets/BuscaCliente';
 
 interface CarrinhoItem {
@@ -35,6 +35,41 @@ const VendasPage: React.FC = () => {
     const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
     const [caixaAberto, setCaixaAberto] = useState<any>(null);
     const [verificandoCaixa, setVerificandoCaixa] = useState(true);
+    const clienteInputRef = useRef<HTMLDivElement>(null);
+    const produtoInputRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setTimeout(() => {
+            clienteInputRef.current?.querySelector('input')?.focus();
+        }, 100);
+    }, []);
+
+    useEffect(() => {
+        if (clienteSelecionado) {
+            produtoInputRef.current?.querySelector('input')?.focus();
+        }
+    }, [clienteSelecionado]);
+
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            carrinho.length > 0 &&
+            currentLocation.pathname !== nextLocation.pathname
+    );
+
+    useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (carrinho.length > 0) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [carrinho.length]);
 
     useEffect(() => {
         const verificarCaixa = async () => {
@@ -203,7 +238,6 @@ const VendasPage: React.FC = () => {
         setDesconto(0);
     };
 
-    if (verificandoCaixa) return <CircularProgress />;
     if (!caixaAberto) return <AvisoCaixaFechado />;
 
     return (
@@ -211,10 +245,10 @@ const VendasPage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 7 }}>
                 <Typography variant="h5" gutterBottom>PDV - Ponto de Venda</Typography>
                 <Paper sx={{ p: 2, mb: 2 }}>
-                    <BuscaCliente onClienteChange={setClienteSelecionado} />
+                    <BuscaCliente ref={clienteInputRef} onClienteChange={setClienteSelecionado} />
                 </Paper>
                 <Paper sx={{ p: 2, mb: 2 }}>
-                    <BuscaProduto onAddProduto={handleAddItemAoCarrinho} />
+                    <BuscaProduto ref={produtoInputRef} onAddProduto={handleAddItemAoCarrinho} />
                 </Paper>
                 <Paper sx={{ p: 2 }}>
                     <Typography variant="h6" sx={{ mb: 2 }}>Carrinho</Typography>
@@ -266,6 +300,29 @@ const VendasPage: React.FC = () => {
                 valorTotal={totais.valorLiquido}
                 onFinalizarVenda={handleFinalizarVenda}
             />
+
+            {blocker.state === "blocked" ? (
+                <Dialog
+                    open={true}
+                    onClose={() => blocker.reset?.()}
+                >
+                    <DialogTitle>Descartar Pedido?</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Você tem itens no carrinho. Se você sair da página agora, o pedido atual será perdido.
+                            Tem certeza que deseja continuar?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => blocker.reset?.()} color="primary">
+                            Cancelar
+                        </Button>
+                        <Button onClick={() => blocker.proceed?.()} color="warning" autoFocus>
+                            Sair da Página
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            ) : null}
         </Grid>
     );
 };

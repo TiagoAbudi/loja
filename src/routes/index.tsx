@@ -1,7 +1,16 @@
+// SEU NOVO ARQUIVO AppRoutes.tsx
+
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+// 1. Importações necessárias ATUALIZADAS
+import {
+    createBrowserRouter,
+    RouterProvider,
+    Navigate,
+    Outlet,
+} from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 
+// Imports das suas páginas (mantidos)
 import SignUpPage from '../pages/SignUpPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
@@ -21,6 +30,7 @@ import FornecedoresPage from '../pages/FornecedoresPage';
 import EntradaProdutosPage from '../pages/EntradaProdutosPage';
 import RelatorioLucratividadePage from '../pages/RelatorioLucratividadePage';
 import NotasFiscaisPage from '../pages/NotasFiscaisPage';
+import FuncionariosPage from '../pages/FuncionariosPage'
 
 const ProtectedRoute = ({ session }: { session: Session | null }) => {
     if (!session) {
@@ -34,57 +44,50 @@ interface AppRoutesProps {
 }
 
 export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
-    return (
-        <BrowserRouter basename="/loja">
-            <Routes>
-                <Route path="/login" element={!session ? <LoginPage /> : <Navigate to="/" replace />} />
-                <Route path="/signup" element={!session ? <SignUpPage /> : <Navigate to="/" replace />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/update-password" element={<ResetPasswordPage />} />
+    const router = createBrowserRouter(
+        [
+            {
+                element: <ProtectedRoute session={session} />,
+                children: [
+                    { path: '/', element: <HomePage /> },
+                    { path: '/produtos', element: <ProductsPage /> },
+                    { path: '/clientes', element: <CustomersPage /> },
+                    { path: '/contas-a-pagar', element: <ContasAPagarPage /> },
+                    { path: '/contas-a-receber', element: <ContasAReceberPage /> },
+                    { path: '/caixa', element: <CaixaPage /> },
+                    { path: '/venda', element: <VendasPage /> }, // <- Sua página de vendas está aqui
+                    { path: '/relatorio-vendas', element: <RelatorioVendasPage /> },
+                    { path: '/relatorio-item-cliente', element: <RelatorioItensPorClientePage /> },
+                    { path: '/relatorio-compras', element: <RelatorioComprasPage /> },
+                    { path: '/fornecedores', element: <FornecedoresPage /> },
+                    { path: '/entrada', element: <EntradaProdutosPage /> },
+                    { path: '/relatorio-lucratividade', element: <RelatorioLucratividadePage /> },
+                    { path: '/notas-fiscais', element: <NotasFiscaisPage /> },
+                    { path: '/funcionarios', element: <FuncionariosPage /> },
+                ],
+            },
 
-                <Route path="/" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<HomePage />} />
-                </Route>
-                <Route path="/produtos" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<ProductsPage />} />
-                </Route>
-                <Route path="/clientes" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<CustomersPage />} />
-                </Route>
-                <Route path="/contas-a-pagar" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<ContasAPagarPage />} />
-                </Route>
-                <Route path="/contas-a-receber" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<ContasAReceberPage />} />
-                </Route>
-                <Route path="/caixa" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<CaixaPage />} />
-                </Route>
-                <Route path="/venda" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<VendasPage />} />
-                </Route>
-                <Route path="/relatorio-vendas" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<RelatorioVendasPage />} />
-                </Route>
-                <Route path="/relatorio-item-cliente" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<RelatorioItensPorClientePage />} />
-                </Route>
-                <Route path="/relatorio-compras" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<RelatorioComprasPage />} />
-                </Route>
-                <Route path="/fornecedores" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<FornecedoresPage />} />
-                </Route>
-                <Route path="/entrada" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<EntradaProdutosPage />} />
-                </Route>
-                <Route path="/relatorio-lucratividade" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<RelatorioLucratividadePage />} />
-                </Route>
-                  <Route path="/notas-fiscais" element={<ProtectedRoute session={session} />}>
-                    <Route index element={<NotasFiscaisPage />} />
-                </Route>
-            </Routes>
-        </BrowserRouter>
+            {
+                path: '/login',
+                element: !session ? <LoginPage /> : <Navigate to="/" replace />,
+            },
+            {
+                path: '/signup',
+                element: !session ? <SignUpPage /> : <Navigate to="/" replace />,
+            },
+            {
+                path: '/forgot-password',
+                element: <ForgotPasswordPage />,
+            },
+            {
+                path: '/update-password',
+                element: <ResetPasswordPage />,
+            },
+        ],
+        {
+            basename: '/loja',
+        }
     );
+
+    return <RouterProvider router={router} />;
 };

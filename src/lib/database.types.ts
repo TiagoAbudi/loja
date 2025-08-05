@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -11,6 +12,31 @@ export type Database = {
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -313,6 +339,36 @@ export type Database = {
         }
         Relationships: []
       }
+      funcionarios: {
+        Row: {
+          cargo: string | null
+          created_at: string | null
+          credito: number
+          data_admissao: string | null
+          id: number
+          nome: string
+          status: string
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string | null
+          credito?: number
+          data_admissao?: string | null
+          id?: number
+          nome: string
+          status?: string
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string | null
+          credito?: number
+          data_admissao?: string | null
+          id?: number
+          nome?: string
+          status?: string
+        }
+        Relationships: []
+      }
       Produtos: {
         Row: {
           estoque: number | null
@@ -513,6 +569,16 @@ export type Database = {
         Args: { id_da_compra: number }
         Returns: undefined
       }
+      registrar_nfe_emitida: {
+        Args: {
+          p_venda_id: number
+          p_status_nfe: string
+          p_chave_acesso: string
+          p_url_xml: string
+          p_url_danfe: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       metodo_pagamento:
@@ -655,6 +721,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       metodo_pagamento: [

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
 import { supabase } from '../supabaseClient';
 
@@ -11,7 +11,9 @@ interface BuscaClienteProps {
     onClienteChange: (cliente: Cliente | null) => void;
 }
 
-export const BuscaCliente: React.FC<BuscaClienteProps> = ({ onClienteChange }) => {
+export const BuscaCliente = forwardRef<HTMLDivElement, BuscaClienteProps>((props, ref) => {
+    const { onClienteChange } = props;
+
     const [options, setOptions] = useState<Cliente[]>([]);
     const [loading, setLoading] = useState(false);
     const [inputValue, setInputValue] = useState('');
@@ -36,13 +38,14 @@ export const BuscaCliente: React.FC<BuscaClienteProps> = ({ onClienteChange }) =
 
     return (
         <Autocomplete
+            ref={ref}
             freeSolo
             options={options}
             loading={loading}
             onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
             onChange={(_, value) => {
                 if (typeof value === 'string') {
-                    onClienteChange({ id: 0, nome: value }); 
+                    onClienteChange({ id: 0, nome: value });
                 } else {
                     onClienteChange(value);
                 }
@@ -67,4 +70,4 @@ export const BuscaCliente: React.FC<BuscaClienteProps> = ({ onClienteChange }) =
             )}
         />
     );
-};
+});

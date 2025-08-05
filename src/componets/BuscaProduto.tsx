@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box, Button } from '@mui/material';
+import React, { useState, useEffect, forwardRef } from 'react';
+import { Autocomplete, TextField, Box, Button } from '@mui/material';
 import { supabase } from '../supabaseClient';
 import { Product } from '../pages/ProductsPage';
 
@@ -7,12 +7,22 @@ interface BuscaProdutoProps {
     onAddProduto: (produto: Product) => void;
 }
 
-export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
+export const BuscaProduto = forwardRef<HTMLDivElement, BuscaProdutoProps>((props, ref) => {
+    const { onAddProduto } = props;
+
     const [open, setOpen] = useState(false);
     const [options, setOptions] = useState<readonly Product[]>([]);
     const [loading, setLoading] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [produtoSelecionado, setProdutoSelecionado] = useState<Product | null>(null);
+
+    const handleProdutoAdicionado = (produto: Product) => {
+        onAddProduto(produto);
+        setProdutoSelecionado(null);
+        setInputValue('');
+        setOptions([]);
+        setOpen(false);
+    };
 
     useEffect(() => {
         if (inputValue === '' || inputValue.length < 2) {
@@ -20,13 +30,12 @@ export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
             return;
         }
 
-        setLoading(true);
-
         const timer = setTimeout(async () => {
+            setLoading(true);
             const { data, error } = await supabase
                 .from('Produtos')
                 .select('*')
-                .ilike('nome', `%${inputValue}%`)
+                .or(`nome.ilike.%${inputValue}%,sku.ilike.%${inputValue}%`)
                 .limit(10);
 
             if (error) {
@@ -44,15 +53,47 @@ export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
 
     const handleAddClick = () => {
         if (produtoSelecionado) {
-            onAddProduto(produtoSelecionado);
-            setProdutoSelecionado(null);
-            setInputValue('');
+            handleProdutoAdicionado(produtoSelecionado);
+        }
+    };
+
+    const handleKeyDown = async (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            if (produtoSelecionado) {
+                handleProdutoAdicionado(produtoSelecionado);
+                return;
+            }
+
+            if (inputValue.trim() !== '') {
+                setLoading(true);
+                const { data, error } = await supabase
+                    .from('Produtos')
+                    .select('*')
+                    .or(`nome.ilike.%${inputValue}%,sku.ilike.%${inputValue}%`)
+                    .limit(2);
+                setLoading(false);
+
+                if (error) {
+                    console.error("Erro na busca por Enter:", error);
+                    return;
+                }
+
+                if (data && data.length === 1) {
+                    handleProdutoAdicionado(data[0]);
+                } else {
+                    setOptions(data || []);
+                    setOpen(true);
+                }
+            }
         }
     };
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Autocomplete
+                ref={ref}
                 sx={{ flexGrow: 1 }}
                 open={open}
                 onOpen={() => setOpen(true)}
@@ -65,22 +106,18 @@ export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
                 onChange={(event, newValue) => {
                     setProdutoSelecionado(newValue);
                 }}
-                onInputChange={(event, newInputValue) => {
-                    setInputValue(newInputValue);
+                inputValue={inputValue}
+                onInputChange={(event, newInputValue, reason) => {
+                    if (reason === 'input') {
+                        setInputValue(newInputValue);
+                    }
                 }}
+                filterOptions={(x) => x}
                 renderInput={(params) => (
                     <TextField
                         {...params}
-                        label="Buscar Produto por Nome ou SKU"
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
-                        }}
+                        onKeyDown={handleKeyDown}
+                        label="Buscar Produto (Leitor ou Manual)"
                     />
                 )}
             />
@@ -89,4 +126,4 @@ export const BuscaProduto: React.FC<BuscaProdutoProps> = ({ onAddProduto }) => {
             </Button>
         </Box>
     );
-};
+});

@@ -24,6 +24,7 @@ import { supabase } from '../supabaseClient';
 import { ColorModeContext } from '../contexts/ThemeContext';
 import myLogo from '../assets/logo.png';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import Groups2Icon from '@mui/icons-material/Groups2';
 
 const drawerWidth = 300;
 
@@ -66,6 +67,7 @@ const DashboardLayout: React.FC = () => {
         { text: 'Entrada Produtos', icon: <ShoppingBasketIcon />, path: '/entrada' },
         { text: 'Fornecedores', icon: <RecentActorsIcon />, path: '/fornecedores' },
         { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
+        { text: 'Funcionários', icon: <Groups2Icon />, path: '/funcionarios' },
       ]
     },
     {
