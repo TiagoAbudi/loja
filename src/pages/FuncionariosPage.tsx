@@ -19,7 +19,6 @@ import { FuncionarioFormDialog } from '../componets/FuncionarioFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
 import { DialogImportData } from '../componets/DialogImportData';
-import { PostgrestError } from '@supabase/supabase-js';
 
 export interface Funcionario {
     id: number;
@@ -109,36 +108,45 @@ export const FuncionariosPage: React.FC = () => {
         setConfirmOpen(false);
     };
 
-    const handleSaveFuncionario = useCallback(async (formData: Partial<Funcionario>) => {
+    const handleSaveFuncionario = useCallback(async (formData: Partial<Funcionario> & { email?: string; senha?: string }) => {
         if (!formData.nome || formData.nome.trim() === '') {
             alert('O nome do funcionário é obrigatório.');
             return;
         }
 
-        let error: PostgrestError | null = null;
+        let error: any = null;
 
         if (formData.id) {
             const { id, ...updateData } = formData;
             const { error: updateError } = await supabase.from('funcionarios').update(updateData).eq('id', id);
             error = updateError;
         } else {
-            const { error: insertError } = await supabase.from('funcionarios').insert({
-                nome: formData.nome,
-                cargo: formData.cargo,
-                status: formData.status || 'Ativo',
-                credito: formData.credito || 0,
+            if (!formData.email || !formData.senha) {
+                alert('E-mail e Senha são obrigatórios para criar um novo funcionário.');
+                return;
+            }
+
+            const { data, error: invokeError } = await supabase.functions.invoke('criar_usuario_funcionario', {
+                body: { funcionarioData: formData },
             });
-            error = insertError;
+
+            if (data?.error) {
+                error = data.error;
+            } else if (invokeError) {
+                error = invokeError;
+            }
         }
 
         if (error) {
-            console.error('Erro ao salvar funcionário:', error.message);
-            alert('Erro ao salvar: ' + error.message);
+            console.error('Erro ao salvar funcionário:', error);
+            const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? error.message : String(error);
+            alert("Erro ao salvar: " + errorMessage);
         } else {
             handleCloseDialogs();
             fetchFuncionarios();
         }
     }, [fetchFuncionarios]);
+
 
     const handleOpenConfirmDialog = (id: number) => {
         setFuncionarioToDelete(id);

@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, Grid, Button, Divider, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { supabase } from '../supabaseClient';
-
 import { Product } from './ProductsPage';
 import { Pagamento, PagamentoDialog } from '../componets/PagamentoDialog';
 import { BuscaProduto } from '../componets/BuscaProduto';
 import { CarrinhoItens } from '../componets/CarrinhoItens';
 import { Link, useBlocker } from 'react-router-dom';
-import { BuscaCliente, Cliente } from '../componets/BuscaCliente';
+import { Cliente } from '../componets/BuscaCliente';
+import { BuscaPessoa, Pessoa } from '../componets/BuscaPessoa';
 
 interface CarrinhoItem {
     produto_id: number;
@@ -16,7 +16,6 @@ interface CarrinhoItem {
     preco_unitario: number;
     preco_total: number;
 }
-
 
 const AvisoCaixaFechado = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', textAlign: 'center' }}>
@@ -37,6 +36,7 @@ const VendasPage: React.FC = () => {
     const [verificandoCaixa, setVerificandoCaixa] = useState(true);
     const clienteInputRef = useRef<HTMLDivElement>(null);
     const produtoInputRef = useRef<HTMLDivElement>(null);
+    const [pessoaSelecionada, setPessoaSelecionada] = useState<Pessoa | null>(null);
 
     useEffect(() => {
         setTimeout(() => {
@@ -121,7 +121,6 @@ const VendasPage: React.FC = () => {
         });
     }, []);
 
-
     const handleUpdateQuantidade = useCallback((produtoId: number, novaQuantidade: number) => {
         setCarrinho(prevCarrinho => {
             if (novaQuantidade <= 0) {
@@ -141,15 +140,18 @@ const VendasPage: React.FC = () => {
 
     const handleFinalizarVenda = async (pagamentos: Pagamento[]) => {
         setPagamentoDialogOpen(false);
-        if (!clienteSelecionado) { alert("Selecione um cliente para a venda."); return; }
-        if (carrinho.length === 0) { alert("O carrinho está vazio."); return; }
-
-        if (!clienteSelecionado || !clienteSelecionado.nome) {
-            alert("Selecione ou digite o nome de um cliente para a venda.");
+        if (!pessoaSelecionada || !pessoaSelecionada.nome) {
+            alert("Selecione um cliente ou funcionário para a venda.");
+            return;
+        }
+        if (carrinho.length === 0) {
+            alert("O carrinho está vazio.");
             return;
         }
 
-        const { data: clienteId, error: clienteError } = await supabase.rpc('get_or_create_cliente', { nome_cliente: clienteSelecionado.nome });
+        const { data: clienteId, error: clienteError } = await supabase.rpc('get_or_create_cliente', {
+            nome_cliente: pessoaSelecionada.nome,
+        });
 
         if (clienteError) {
             console.error("Erro ao buscar/criar cliente:", clienteError);
@@ -184,6 +186,7 @@ const VendasPage: React.FC = () => {
             preco_unitario: item.preco_unitario,
             preco_total: item.preco_total
         }));
+
         const { error: itensError } = await supabase.from('venda_itens').insert(itensParaInserir);
         if (itensError) {
             console.error("Erro ao inserir itens:", itensError);
@@ -222,6 +225,21 @@ const VendasPage: React.FC = () => {
                     descricao: `Recebimento da Venda #${vendaId}`,
                     valor: pag.valor
                 });
+
+            }
+
+            if (pag.metodo === 'Crédito Funcionário') {
+                if (pessoaSelecionada.tipo === 'Funcionario') {
+                    const { error: creditoError } = await supabase.rpc('descontar_credito_funcionario', {
+                        id_funcionario: pessoaSelecionada.id,
+                        valor_desconto: pag.valor
+                    });
+
+                    if (creditoError) {
+                        console.error("ERRO CRÍTICO ao descontar crédito:", creditoError);
+                        alert(`ATENÇÃO: A venda #${vendaId} foi registrada, mas ocorreu um erro ao descontar o crédito do funcionário. Por favor, ajuste manualmente ou contate o suporte.`);
+                    }
+                }
             }
         }
 
@@ -234,9 +252,10 @@ const VendasPage: React.FC = () => {
 
         alert("Venda finalizada com sucesso!");
         setCarrinho([]);
-        setClienteSelecionado(null);
+        setPessoaSelecionada(null);
         setDesconto(0);
     };
+
 
     if (!caixaAberto) return <AvisoCaixaFechado />;
 
@@ -245,7 +264,7 @@ const VendasPage: React.FC = () => {
             <Grid size={{ xs: 12, lg: 7 }}>
                 <Typography variant="h5" gutterBottom>PDV - Ponto de Venda</Typography>
                 <Paper sx={{ p: 2, mb: 2 }}>
-                    <BuscaCliente ref={clienteInputRef} onClienteChange={setClienteSelecionado} />
+                    <BuscaPessoa ref={clienteInputRef} onPessoaChange={setPessoaSelecionada} />
                 </Paper>
                 <Paper sx={{ p: 2, mb: 2 }}>
                     <BuscaProduto ref={produtoInputRef} onAddProduto={handleAddItemAoCarrinho} />
@@ -299,6 +318,8 @@ const VendasPage: React.FC = () => {
                 onClose={() => setPagamentoDialogOpen(false)}
                 valorTotal={totais.valorLiquido}
                 onFinalizarVenda={handleFinalizarVenda}
+                isFuncionario={pessoaSelecionada?.tipo === 'Funcionario'}
+                creditoDisponivel={pessoaSelecionada?.credito_disponivel ?? 0}
             />
 
             {blocker.state === "blocked" ? (

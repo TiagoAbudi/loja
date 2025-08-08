@@ -1,16 +1,11 @@
-// SEU NOVO ARQUIVO AppRoutes.tsx
-
 import React from 'react';
-// 1. Importações necessárias ATUALIZADAS
 import {
     createBrowserRouter,
     RouterProvider,
     Navigate,
-    Outlet,
 } from 'react-router-dom';
 import { Session } from '@supabase/supabase-js';
 
-// Imports das suas páginas (mantidos)
 import SignUpPage from '../pages/SignUpPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
@@ -31,6 +26,7 @@ import EntradaProdutosPage from '../pages/EntradaProdutosPage';
 import RelatorioLucratividadePage from '../pages/RelatorioLucratividadePage';
 import NotasFiscaisPage from '../pages/NotasFiscaisPage';
 import FuncionariosPage from '../pages/FuncionariosPage'
+import RelatorioCaixaPage from '../pages/RelatorioCaixaPage'
 
 const ProtectedRoute = ({ session }: { session: Session | null }) => {
     if (!session) {
@@ -64,6 +60,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
                     { path: '/relatorio-lucratividade', element: <RelatorioLucratividadePage /> },
                     { path: '/notas-fiscais', element: <NotasFiscaisPage /> },
                     { path: '/funcionarios', element: <FuncionariosPage /> },
+                    { path: '/relatorio-caixa', element: <RelatorioCaixaPage /> },
                 ],
             },
 

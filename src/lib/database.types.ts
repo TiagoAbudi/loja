@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -12,31 +11,6 @@ export type Database = {
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
   }
   public: {
     Tables: {
@@ -402,6 +376,32 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          funcionario_id: number | null
+          id: string
+          role: string
+        }
+        Insert: {
+          funcionario_id?: number | null
+          id: string
+          role?: string
+        }
+        Update: {
+          funcionario_id?: number | null
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: true
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venda_itens: {
         Row: {
           id: number
@@ -519,11 +519,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pessoas_venda: {
+        Row: {
+          credito_disponivel: number | null
+          id: number | null
+          nome: string | null
+          tipo: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       atualizar_contas_vencidas: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      descontar_credito_funcionario: {
+        Args: { id_funcionario: number; valor_desconto: number }
         Returns: undefined
       }
       finalizar_venda: {
@@ -558,6 +570,15 @@ export type Database = {
         Args: { nome_fornecedor: string }
         Returns: number
       }
+      get_relatorio_caixa_totalizadores: {
+        Args: { data_inicio: string; data_fim: string }
+        Returns: {
+          total_vendas: number
+          total_sangrias: number
+          total_suprimentos: number
+          diferenca_total: number
+        }[]
+      }
       get_vendas_ultimos_7_dias: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -587,6 +608,7 @@ export type Database = {
         | "Cartão de Débito"
         | "Pix"
         | "A Prazo"
+        | "Crédito Funcionário"
       status_pagamento: "Pendente" | "Pago" | "Vencido"
       status_recebimento: "Pendente" | "Recebido" | "Vencido"
       tipo_movimentacao:
@@ -721,9 +743,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       metodo_pagamento: [
@@ -732,6 +751,7 @@ export const Constants = {
         "Cartão de Débito",
         "Pix",
         "A Prazo",
+        "Crédito Funcionário",
       ],
       status_pagamento: ["Pendente", "Pago", "Vencido"],
       status_recebimento: ["Pendente", "Recebido", "Vencido"],

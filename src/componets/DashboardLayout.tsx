@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, ListSubheader } from '@mui/material';
+import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, ListSubheader, CssBaseline } from '@mui/material';
 import { Outlet, Link as RouterLink, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -25,10 +25,13 @@ import { ColorModeContext } from '../contexts/ThemeContext';
 import myLogo from '../assets/logo.png';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import Groups2Icon from '@mui/icons-material/Groups2';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 300;
 
-const DashboardLayout: React.FC = () => {
+export const DashboardLayout: React.FC = () => {
+  const { profile } = useAuth();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -89,17 +92,41 @@ const DashboardLayout: React.FC = () => {
       items: [
         { text: 'Relatório de Vendas', icon: <SummarizeIcon />, path: '/relatorio-vendas' },
         { text: 'Relatório de Compras', icon: <ShoppingCartCheckoutIcon />, path: '/relatorio-compras' },
+        { text: 'Relatório de Caixas', icon: <AccountBalanceIcon />, path: '/relatorio-caixa' },
         { text: 'Relatório Itens Clientes', icon: <PersonSearchIcon />, path: '/relatorio-item-cliente' },
         { text: 'Relatório Lucratividade', icon: <SsidChartIcon />, path: '/relatorio-lucratividade' },
       ]
     }
   ];
 
+  const visibleMenuSections = useMemo(() => {
+    if (!profile) return [];
+    if (profile.role === 'admin') return menuSections;
+
+    const funcionarioPaths = [
+      '/',
+      '/venda',
+      '/produtos',
+      '/clientes',
+      '/caixa',
+      '/relatorio-vendas'
+    ];
+
+    return menuSections
+      .map(section => ({
+        ...section,
+        items: section.items.filter(item => funcionarioPaths.includes(item.path)),
+      }))
+      .filter(section => section.items.length > 0);
+
+  }, [profile, menuSections]);
+
   const drawerContent = (
     <>
+      <Toolbar />
       <Divider />
       <List component="nav">
-        {menuSections.map((section, index) => (
+        {visibleMenuSections.map((section, index) => (
           <React.Fragment key={section.title || `section-${index}`}>
             {section.title && <ListSubheader component="div">{section.title}</ListSubheader>}
             {section.items.map((item) => (
@@ -122,7 +149,8 @@ const DashboardLayout: React.FC = () => {
 
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      <CssBaseline />
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar sx={{ pr: '24px' }}>
           <IconButton
@@ -152,9 +180,16 @@ const DashboardLayout: React.FC = () => {
         open={open}
         onClose={handleDrawerClose}
         sx={{
+          width: drawerWidth,
+          flexShrink: 0,
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': { width: '8px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': { background: theme.palette.action.hover, borderRadius: '4px' },
+            '&::-webkit-scrollbar-thumb:hover': { background: theme.palette.action.selected },
             ...(!isMobile && {
               position: 'relative',
               whiteSpace: 'nowrap',
@@ -174,13 +209,12 @@ const DashboardLayout: React.FC = () => {
           },
         }}
       >
-        <Toolbar />
         {drawerContent}
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, height: '100vh', overflow: 'auto' }}>
+      <Box component="main" sx={{ flexGrow: 1, overflow: 'auto', height: '100vh' }}>
         <Toolbar />
-        <Box sx={{ p: 3, height: 'calc(100% - 64px)' }}>
+        <Box sx={{ p: 3 }}>
           <Outlet />
         </Box>
       </Box>

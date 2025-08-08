@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box,
-    Select, MenuItem, TextField, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Divider
+    Select, MenuItem, TextField, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Divider, SelectChangeEvent
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+export type MetodoPagamento = 'Dinheiro' | 'Cartão de Crédito' | 'Cartão de Débito' | 'Pix' | 'A Prazo' | 'Crédito Funcionário';
+
 export interface Pagamento {
-    metodo: 'Dinheiro' | 'Cartão de Crédito' | 'Cartão de Débito' | 'Pix' | 'A Prazo';
+    metodo: MetodoPagamento;
     valor: number;
 }
 
@@ -16,20 +18,23 @@ interface PagamentoDialogProps {
     onClose: () => void;
     valorTotal: number;
     onFinalizarVenda: (pagamentos: Pagamento[]) => void;
+    isFuncionario: boolean;
+    creditoDisponivel: number;
 }
 
-export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose, valorTotal, onFinalizarVenda }) => {
-    const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
-    const [metodoAtual, setMetodoAtual] = useState<'Dinheiro' | 'Cartão de Crédito' | 'Cartão de Débito' | 'Pix' | 'A Prazo'>('Dinheiro');
-    const [valorAtual, setValorAtual] = useState('');
+const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-    useEffect(() => {
-        if (open) {
-            setPagamentos([]);
-            setValorAtual(valorTotal.toFixed(2));
-            setMetodoAtual('Dinheiro');
-        }
-    }, [open, valorTotal]);
+export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({
+    open,
+    onClose,
+    valorTotal,
+    onFinalizarVenda,
+    isFuncionario,
+    creditoDisponivel
+}) => {
+    const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+    const [metodoAtual, setMetodoAtual] = useState<MetodoPagamento>('Dinheiro');
+    const [valorAtual, setValorAtual] = useState('');
 
     const totais = useMemo(() => {
         const valorPago = pagamentos.reduce((acc, pag) => acc + pag.valor, 0);
@@ -38,22 +43,55 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
         return { valorPago, restante, troco };
     }, [pagamentos, valorTotal]);
 
+    useEffect(() => {
+        if (open) {
+            setPagamentos([]);
+            setValorAtual(totais.restante > 0 ? totais.restante.toFixed(2) : '');
+            setMetodoAtual('Dinheiro');
+        }
+    }, [open, valorTotal]);
+
+    const metodosDisponiveis = useMemo(() => {
+        const base: MetodoPagamento[] = ['Dinheiro', 'Cartão de Débito', 'Cartão de Crédito', 'Pix', 'A Prazo'];
+        if (isFuncionario && creditoDisponivel > 0) {
+            return ['Crédito Funcionário', ...base];
+        }
+        return base;
+    }, [isFuncionario, creditoDisponivel]);
+
+    useEffect(() => {
+        if (metodoAtual === 'Crédito Funcionário') {
+            const valorAplicavel = Math.min(totais.restante, creditoDisponivel);
+            setValorAtual(valorAplicavel > 0 ? valorAplicavel.toFixed(2) : '');
+        } else {
+            setValorAtual(totais.restante > 0 ? totais.restante.toFixed(2) : '');
+        }
+    }, [metodoAtual, totais.restante, creditoDisponivel]);
+
+
     const handleAddPagamento = () => {
         const valorNum = parseFloat(valorAtual);
         if (isNaN(valorNum) || valorNum <= 0) {
-            alert("Valor inválido, meu parça!");
+            alert("Valor inválido!");
             return;
         }
+
+        if (metodoAtual === 'Crédito Funcionário' && valorNum > creditoDisponivel) {
+            alert(`O valor não pode exceder o crédito disponível de ${formatCurrency(creditoDisponivel)}.`);
+            return;
+        }
+
         const novoPagamento: Pagamento = { metodo: metodoAtual, valor: valorNum };
         setPagamentos([...pagamentos, novoPagamento]);
-
-        const valorRestante = totais.restante - valorNum;
-        setValorAtual(valorRestante > 0 ? valorRestante.toFixed(2) : '');
     };
 
     const handleRemovePagamento = (index: number) => {
         const novosPagamentos = pagamentos.filter((_, i) => i !== index);
         setPagamentos(novosPagamentos);
+    };
+
+    const handleMetodoChange = (e: SelectChangeEvent<MetodoPagamento>) => {
+        setMetodoAtual(e.target.value as MetodoPagamento);
     };
 
     return (
@@ -63,18 +101,20 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
                 <Box sx={{ textAlign: 'center', my: 2 }}>
                     <Typography variant="h6">Total a Pagar</Typography>
                     <Typography variant="h3" color="primary" fontWeight="bold">
-                        {valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {formatCurrency(valorTotal)}
                     </Typography>
                 </Box>
                 <Divider sx={{ my: 2 }} />
 
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                    <Select value={metodoAtual} onChange={(e) => setMetodoAtual(e.target.value as any)} sx={{ flex: 1 }}>
-                        <MenuItem value="Dinheiro">Dinheiro</MenuItem>
-                        <MenuItem value="Cartão de Crédito">Cartão de Crédito</MenuItem>
-                        <MenuItem value="Cartão de Débito">Cartão de Débito</MenuItem>
-                        <MenuItem value="Pix">Pix</MenuItem>
-                        <MenuItem value="A Prazo">A Prazo</MenuItem>
+                    <Select value={metodoAtual} onChange={handleMetodoChange} sx={{ flex: 1 }}>
+                        {/* --- 6. MAPEIA A LISTA DINÂMICA DE MÉTODOS --- */}
+                        {metodosDisponiveis.map(metodo => (
+                            <MenuItem key={metodo} value={metodo}>
+                                {metodo}
+                                {metodo === 'Crédito Funcionário' && ` (Disp: ${formatCurrency(creditoDisponivel)})`}
+                            </MenuItem>
+                        ))}
                     </Select>
                     <TextField
                         label="Valor"
@@ -93,7 +133,7 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
                 <List dense>
                     {pagamentos.map((pag, index) => (
                         <ListItem key={index} sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 0.5 }}>
-                            <ListItemText primary={pag.metodo} secondary={pag.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+                            <ListItemText primary={pag.metodo} secondary={formatCurrency(pag.valor)} />
                             <ListItemSecondaryAction>
                                 <IconButton edge="end" onClick={() => handleRemovePagamento(index)}>
                                     <DeleteIcon fontSize="small" />
@@ -105,11 +145,10 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({ open, onClose,
                 <Divider sx={{ my: 2 }} />
 
                 <Box sx={{ textAlign: 'right' }}>
-                    <Typography>Total Pago: {totais.valorPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Typography>
-                    {totais.restante > 0 && <Typography color="error">Falta: {totais.restante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Typography>}
-                    {totais.troco > 0 && <Typography color="success.main" variant="h6">Troco: {totais.troco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Typography>}
+                    <Typography>Total Pago: {formatCurrency(totais.valorPago)}</Typography>
+                    {totais.restante > 0 && <Typography color="error">Falta: {formatCurrency(totais.restante)}</Typography>}
+                    {totais.troco > 0 && <Typography color="success.main" variant="h6">Troco: {formatCurrency(totais.troco)}</Typography>}
                 </Box>
-
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Cancelar Venda</Button>
