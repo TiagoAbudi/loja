@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Dialog, DialogActions, DialogContent, DialogTitle, TextField,
-    MenuItem, FormControl, InputLabel, Select, Button, Box, FormHelperText, CircularProgress,
+    MenuItem, FormControl, InputLabel, Select, Button, Box,
     SelectChangeEvent
 } from '@mui/material';
 import { NumericFormat, NumericFormatProps } from 'react-number-format';
@@ -52,7 +52,7 @@ const initialProductState: Omit<Product, 'id' | 'created_at'> = {
 export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({ open, onClose, onSave, initialData }) => {
     const [product, setProduct] = useState(initialProductState);
     const [fornecedores, setFornecedores] = useState<{ id: number; nome_fantasia: string; }[]>([]);
-    const [loadingFornecedores, setLoadingFornecedores] = useState(false);
+    const [, setLoadingFornecedores] = useState(false);
 
     useEffect(() => {
         if (open) {

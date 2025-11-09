@@ -6,7 +6,6 @@ import { Pagamento, PagamentoDialog } from '../componets/PagamentoDialog';
 import { BuscaProduto } from '../componets/BuscaProduto';
 import { CarrinhoItens } from '../componets/CarrinhoItens';
 import { Link, useBlocker } from 'react-router-dom';
-import { Cliente } from '../componets/BuscaCliente';
 import { BuscaPessoa, Pessoa } from '../componets/BuscaPessoa';
 
 interface CarrinhoItem {
@@ -29,11 +28,10 @@ const AvisoCaixaFechado = () => (
 
 const VendasPage: React.FC = () => {
     const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]);
-    const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
     const [desconto, setDesconto] = useState<number>(0);
     const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
     const [caixaAberto, setCaixaAberto] = useState<any>(null);
-    const [verificandoCaixa, setVerificandoCaixa] = useState(true);
+    const [, setVerificandoCaixa] = useState(true);
     const clienteInputRef = useRef<HTMLDivElement>(null);
     const produtoInputRef = useRef<HTMLDivElement>(null);
     const [pessoaSelecionada, setPessoaSelecionada] = useState<Pessoa | null>(null);
@@ -45,10 +43,10 @@ const VendasPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (clienteSelecionado) {
+        if (pessoaSelecionada) {
             produtoInputRef.current?.querySelector('input')?.focus();
         }
-    }, [clienteSelecionado]);
+    }, [pessoaSelecionada]);
 
     const blocker = useBlocker(
         ({ currentLocation, nextLocation }) =>

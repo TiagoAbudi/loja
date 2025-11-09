@@ -46,7 +46,7 @@ export const PagamentoDialog: React.FC<PagamentoDialogProps> = ({
     useEffect(() => {
         if (open) {
             setPagamentos([]);
-            setValorAtual(totais.restante > 0 ? totais.restante.toFixed(2) : '');
+            setValorAtual(valorTotal > 0 ? valorTotal.toFixed(2) : '');
             setMetodoAtual('Dinheiro');
         }
     }, [open, valorTotal]);
