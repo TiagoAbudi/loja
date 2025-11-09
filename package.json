@@ -1,7 +1,6 @@
 {
   "name": "app-loja",
   "version": "0.1.0",
-  "homepage": "https://TiagoAbudi.github.io/loja",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
