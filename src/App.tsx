@@ -1,3 +1,4 @@
+// Forçando um novo build na Vercel
 import React, { useState, useEffect, useMemo } from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { supabase } from './supabaseClient';
