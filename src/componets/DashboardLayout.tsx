@@ -56,50 +56,50 @@ export const DashboardLayout: React.FC = () => {
     await supabase.auth.signOut();
   };
 
-  const menuSections = [
-    {
-      items: [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-        { text: 'Venda', icon: <AddShoppingCartIcon />, path: '/venda' },
-      ]
-    },
-    {
-      title: 'Cadastros',
-      items: [
-        { text: 'Produtos', icon: <ShoppingCartIcon />, path: '/produtos' },
-        { text: 'Entrada Produtos', icon: <ShoppingBasketIcon />, path: '/entrada' },
-        { text: 'Fornecedores', icon: <RecentActorsIcon />, path: '/fornecedores' },
-        { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
-        { text: 'Funcionários', icon: <Groups2Icon />, path: '/funcionarios' },
-      ]
-    },
-    {
-      title: 'Financeiro',
-      items: [
-        { text: 'Contas a Pagar', icon: <PaymentsIcon />, path: '/contas-a-pagar' },
-        { text: 'Contas a Receber', icon: <PaidIcon />, path: '/contas-a-receber' },
-        { text: 'Caixa', icon: <AccountBalanceWalletIcon />, path: '/caixa' },
-      ]
-    },
-    {
-      title: 'Fiscal',
-      items: [
-        { text: 'Notas Fiscais (NF-e)', icon: <ReceiptLongIcon />, path: '/notas-fiscais' },
-      ]
-    },
-    {
-      title: 'Relatórios',
-      items: [
-        { text: 'Relatório de Vendas', icon: <SummarizeIcon />, path: '/relatorio-vendas' },
-        { text: 'Relatório de Compras', icon: <ShoppingCartCheckoutIcon />, path: '/relatorio-compras' },
-        { text: 'Relatório de Caixas', icon: <AccountBalanceIcon />, path: '/relatorio-caixa' },
-        { text: 'Relatório Itens Clientes', icon: <PersonSearchIcon />, path: '/relatorio-item-cliente' },
-        { text: 'Relatório Lucratividade', icon: <SsidChartIcon />, path: '/relatorio-lucratividade' },
-      ]
-    }
-  ];
-
   const visibleMenuSections = useMemo(() => {
+    const menuSections = [
+      {
+        items: [
+          { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+          { text: 'Venda', icon: <AddShoppingCartIcon />, path: '/venda' },
+        ]
+      },
+      {
+        title: 'Cadastros',
+        items: [
+          { text: 'Produtos', icon: <ShoppingCartIcon />, path: '/produtos' },
+          { text: 'Entrada Produtos', icon: <ShoppingBasketIcon />, path: '/entrada' },
+          { text: 'Fornecedores', icon: <RecentActorsIcon />, path: '/fornecedores' },
+          { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
+          { text: 'Funcionários', icon: <Groups2Icon />, path: '/funcionarios' },
+        ]
+      },
+      {
+        title: 'Financeiro',
+        items: [
+          { text: 'Contas a Pagar', icon: <PaymentsIcon />, path: '/contas-a-pagar' },
+          { text: 'Contas a Receber', icon: <PaidIcon />, path: '/contas-a-receber' },
+          { text: 'Caixa', icon: <AccountBalanceWalletIcon />, path: '/caixa' },
+        ]
+      },
+      {
+        title: 'Fiscal',
+        items: [
+          { text: 'Notas Fiscais (NF-e)', icon: <ReceiptLongIcon />, path: '/notas-fiscais' },
+        ]
+      },
+      {
+        title: 'Relatórios',
+        items: [
+          { text: 'Relatório de Vendas', icon: <SummarizeIcon />, path: '/relatorio-vendas' },
+          { text: 'Relatório de Compras', icon: <ShoppingCartCheckoutIcon />, path: '/relatorio-compras' },
+          { text: 'Relatório de Caixas', icon: <AccountBalanceIcon />, path: '/relatorio-caixa' },
+          { text: 'Relatório Itens Clientes', icon: <PersonSearchIcon />, path: '/relatorio-item-cliente' },
+          { text: 'Relatório Lucratividade', icon: <SsidChartIcon />, path: '/relatorio-lucratividade' },
+        ]
+      }
+    ];
+
     if (!profile) return [];
     if (profile.role === 'admin') return menuSections;
 
@@ -119,7 +119,7 @@ export const DashboardLayout: React.FC = () => {
       }))
       .filter(section => section.items.length > 0);
 
-  }, [profile, menuSections]);
+  }, [profile]);
 
   const drawerContent = (
     <>
