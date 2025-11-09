@@ -80,10 +80,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ session }) => {
                 path: '/update-password',
                 element: <ResetPasswordPage />,
             },
-        ],
-        {
-            basename: '/loja',
-        }
+        ]
     );
 
     return <RouterProvider router={router} />;
