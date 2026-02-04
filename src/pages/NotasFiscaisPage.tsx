@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Chip, IconButton } from '@mui/material';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { supabase } from '../supabaseClient';
 
 interface NotaFiscal {
     id: number;
@@ -17,24 +18,48 @@ interface NotaFiscal {
     urlXml: string;
 }
 
-async function fetchNotasFiscais(): Promise<NotaFiscal[]> {
-    return [
-        { id: 1, numero: 101, serie: 1, cliente: 'Empresa Exemplo Ltda', dataEmissao: new Date(), valor: 1500.50, status: 'Enviada', urlDanfe: '#', urlXml: '#' },
-        { id: 2, numero: 102, serie: 1, cliente: 'Cliente Teste S.A.', dataEmissao: new Date(), valor: 899.00, status: 'Cancelada', urlDanfe: '#', urlXml: '#' },
-        { id: 3, numero: 103, serie: 1, cliente: 'Comércio de Parafusos', dataEmissao: new Date(), valor: 345.80, status: 'Processando', urlDanfe: '#', urlXml: '#' },
-    ];
-}
-
 const NotasFiscaisPage: React.FC = () => {
     const [rows, setRows] = useState<GridRowsProp>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchNotasFiscais().then(data => {
-            setRows(data);
+    const fetchNotasFiscais = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Busca dados reais unindo notas_fiscais, vendas e clientes
+            const { data, error } = await (supabase as any)
+                .from('notas_fiscais')
+                .select(`
+                    id, numero, serie, status, url_xml, url_danfe, data_emissao,
+                    vendas ( valor_liquido, Clientes (nome) )
+                `)
+                .order('data_emissao', { ascending: false });
+
+            if (error) throw error;
+
+            const formattedRows: NotaFiscal[] = (data || []).map((n: any) => ({
+                id: n.id,
+                numero: n.numero || n.id,
+                serie: n.serie || 1,
+                cliente: n.vendas?.Clientes?.nome || 'Consumidor Final',
+                dataEmissao: new Date(n.data_emissao),
+                valor: n.vendas?.valor_liquido || 0,
+                // Mapeia o status do banco para o Chip da interface
+                status: n.status === 'emitida' ? 'Enviada' : n.status,
+                urlDanfe: n.url_danfe || '#',
+                urlXml: n.url_xml || '#'
+            }));
+
+            setRows(formattedRows); // Atualiza o estado internamente
+        } catch (err) {
+            console.error("Erro ao carregar notas:", err);
+        } finally {
             setLoading(false);
-        });
+        }
     }, []);
+
+    useEffect(() => {
+        fetchNotasFiscais();
+    }, [fetchNotasFiscais]);
 
     const columns: GridColDef[] = [
         { field: 'numero', headerName: 'Número', width: 100 },

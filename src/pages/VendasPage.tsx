@@ -1,5 +1,9 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Box, Typography, Paper, Grid, Button, Divider, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import {
+    Box, Typography, Paper, Grid, Button, Divider, TextField, Dialog,
+    DialogActions, DialogContent, DialogContentText, DialogTitle,
+    CircularProgress, Snackbar, Alert
+} from '@mui/material';
 import { supabase } from '../supabaseClient';
 import { Product } from './ProductsPage';
 import { Pagamento, PagamentoDialog } from '../componets/PagamentoDialog';
@@ -27,15 +31,23 @@ const AvisoCaixaFechado = () => (
 );
 
 const VendasPage: React.FC = () => {
+    // ESTADOS PRINCIPAIS
     const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([]);
     const [desconto, setDesconto] = useState<number>(0);
     const [pagamentoDialogOpen, setPagamentoDialogOpen] = useState(false);
     const [caixaAberto, setCaixaAberto] = useState<any>(null);
-    const [, setVerificandoCaixa] = useState(true);
+    const [estaSalvando, setEstaSalvando] = useState(false);
+
+    // ESTADOS DO TOAST (NOTIFICAÇÃO)
+    const [toastOpen, setToastOpen] = useState(false);
+    const [toastMsg, setToastMsg] = useState('');
+    const [toastSeverity, setToastSeverity] = useState<'success' | 'error'>('success');
+
     const clienteInputRef = useRef<HTMLDivElement>(null);
     const produtoInputRef = useRef<HTMLDivElement>(null);
     const [pessoaSelecionada, setPessoaSelecionada] = useState<Pessoa | null>(null);
 
+    // FOCO AUTOMÁTICO
     useEffect(() => {
         setTimeout(() => {
             clienteInputRef.current?.querySelector('input')?.focus();
@@ -48,6 +60,7 @@ const VendasPage: React.FC = () => {
         }
     }, [pessoaSelecionada]);
 
+    // BLOQUEADOR DE NAVEGAÇÃO SE HOUVER ITENS NO CARRINHO
     const blocker = useBlocker(
         ({ currentLocation, nextLocation }) =>
             carrinho.length > 0 &&
@@ -61,19 +74,15 @@ const VendasPage: React.FC = () => {
                 event.returnValue = '';
             }
         };
-
         window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [carrinho.length]);
 
+    // VERIFICAÇÃO DE CAIXA
     useEffect(() => {
         const verificarCaixa = async () => {
             const { data } = await supabase.from('caixas').select('*').eq('status', 'Aberto').maybeSingle();
             setCaixaAberto(data);
-            setVerificandoCaixa(false);
         };
         verificarCaixa();
     }, []);
@@ -85,46 +94,33 @@ const VendasPage: React.FC = () => {
     }, [carrinho, desconto]);
 
     const handleAddItemAoCarrinho = useCallback((produto: Product) => {
-        if (typeof produto.id === 'undefined') {
-            alert("Erro fatal: O produto selecionado não possui um ID. A venda não pode continuar.");
-            return;
-        }
+        if (typeof produto.id === 'undefined') return;
         const precoNumerico = Number(produto.preco);
-        if (isNaN(precoNumerico)) {
-            alert(`O produto "${produto.nome}" está com um preço inválido e não pode ser adicionado à venda.`);
-            return;
-        }
+        if (isNaN(precoNumerico)) return;
 
-        const produtoId = produto.id;
-
-        setCarrinho(prevCarrinho => {
-            const itemExistente = prevCarrinho.find(item => item.produto_id === produtoId);
-
+        setCarrinho(prev => {
+            const itemExistente = prev.find(item => item.produto_id === produto.id);
             if (itemExistente) {
-                return prevCarrinho.map(item =>
-                    item.produto_id === produtoId
+                return prev.map(item =>
+                    item.produto_id === produto.id
                         ? { ...item, quantidade: item.quantidade + 1, preco_total: (item.quantidade + 1) * item.preco_unitario }
                         : item
                 );
-            } else {
-                const novoItem: CarrinhoItem = {
-                    produto_id: produtoId,
-                    nome: produto.nome ?? 'Produto sem nome',
-                    quantidade: 1,
-                    preco_unitario: precoNumerico,
-                    preco_total: precoNumerico
-                };
-                return [...prevCarrinho, novoItem];
             }
+            return [...prev, {
+                produto_id: produto.id!,
+                nome: produto.nome ?? 'Produto',
+                quantidade: 1,
+                preco_unitario: precoNumerico,
+                preco_total: precoNumerico
+            }];
         });
     }, []);
 
     const handleUpdateQuantidade = useCallback((produtoId: number, novaQuantidade: number) => {
-        setCarrinho(prevCarrinho => {
-            if (novaQuantidade <= 0) {
-                return prevCarrinho.filter(item => item.produto_id !== produtoId);
-            }
-            return prevCarrinho.map(item =>
+        setCarrinho(prev => {
+            if (novaQuantidade <= 0) return prev.filter(item => item.produto_id !== produtoId);
+            return prev.map(item =>
                 item.produto_id === produtoId
                     ? { ...item, quantidade: novaQuantidade, preco_total: novaQuantidade * item.preco_unitario }
                     : item
@@ -133,127 +129,116 @@ const VendasPage: React.FC = () => {
     }, []);
 
     const handleRemoveItem = useCallback((produtoId: number) => {
-        setCarrinho(prevCarrinho => prevCarrinho.filter(item => item.produto_id !== produtoId));
+        setCarrinho(prev => prev.filter(item => item.produto_id !== produtoId));
     }, []);
 
+    // FUNÇÃO PRINCIPAL: FINALIZAR VENDA
     const handleFinalizarVenda = async (pagamentos: Pagamento[]) => {
+        if (estaSalvando) return; // Trava cliques múltiplos
+
+        setEstaSalvando(true);
         setPagamentoDialogOpen(false);
-        if (!pessoaSelecionada || !pessoaSelecionada.nome) {
-            alert("Selecione um cliente ou funcionário para a venda.");
-            return;
-        }
-        if (carrinho.length === 0) {
-            alert("O carrinho está vazio.");
-            return;
-        }
 
-        const { data: clienteId, error: clienteError } = await supabase.rpc('get_or_create_cliente', {
-            nome_cliente: pessoaSelecionada.nome,
-        });
+        try {
+            if (!pessoaSelecionada || !pessoaSelecionada.nome) {
+                throw new Error("Selecione um cliente antes de finalizar.");
+            }
 
-        if (clienteError) {
-            console.error("Erro ao buscar/criar cliente:", clienteError);
-            alert(`Erro com o cliente: ${clienteError.message}`);
-            return;
-        }
+            // 1. Criar/Buscar Cliente
+            const { data: clienteId, error: clienteError } = await supabase.rpc('get_or_create_cliente', {
+                nome_cliente: pessoaSelecionada.nome,
+            });
+            if (clienteError) throw clienteError;
 
-        const { data: vendaData, error: vendaError } = await supabase
-            .from('vendas')
-            .insert({
-                cliente_id: clienteId,
-                valor_bruto: totais.valorBruto,
-                desconto: desconto,
-                valor_liquido: totais.valorLiquido,
-                status: 'Em Aberto',
-            })
-            .select()
-            .single();
-
-        if (vendaError) {
-            console.error("Erro ao criar venda:", vendaError);
-            alert(`Erro ao criar venda: ${vendaError.message}`);
-            return;
-        }
-
-        const vendaId = vendaData.id;
-
-        const itensParaInserir = carrinho.map(item => ({
-            venda_id: vendaId,
-            produto_id: item.produto_id,
-            quantidade: item.quantidade,
-            preco_unitario: item.preco_unitario,
-            preco_total: item.preco_total
-        }));
-
-        const { error: itensError } = await supabase.from('venda_itens').insert(itensParaInserir);
-        if (itensError) {
-            console.error("Erro ao inserir itens:", itensError);
-            alert(`Erro ao inserir itens: ${itensError.message}`);
-            return;
-        }
-
-        const pagamentosParaInserir = pagamentos.map(pag => ({
-            venda_id: vendaId,
-            metodo: pag.metodo,
-            valor: pag.valor
-        }));
-        const { error: pagamentosError } = await supabase.from('venda_pagamentos').insert(pagamentosParaInserir);
-        if (pagamentosError) {
-            console.error("Erro ao inserir pagamentos:", pagamentosError);
-            alert(`Erro ao inserir pagamentos: ${pagamentosError.message}`);
-            return;
-        }
-
-        for (const pag of pagamentos) {
-            if (pag.metodo === 'A Prazo') {
-                const hoje = new Date();
-                const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 6);
-                await supabase.from('contas_a_receber').insert({
-                    descricao: `Referente à Venda #${vendaId}`,
-                    valor: pag.valor,
-                    data_vencimento: dataVencimento.toISOString().slice(0, 10),
+            // 2. Inserir Venda (Sequence do banco gera o ID automaticamente)
+            const { data: vendaData, error: vendaError } = await supabase
+                .from('vendas')
+                .insert({
                     cliente_id: clienteId,
-                    status: 'Pendente'
-                });
-            }
-            if (pag.metodo === 'Dinheiro' && caixaAberto) {
-                await supabase.from('caixa_movimentacoes').insert({
-                    caixa_id: caixaAberto.id,
-                    tipo: 'VENDA',
-                    descricao: `Recebimento da Venda #${vendaId}`,
+                    valor_bruto: totais.valorBruto,
+                    desconto: desconto,
+                    valor_liquido: totais.valorLiquido,
+                    status: 'Em Aberto',
+                })
+                .select()
+                .single();
+
+            if (vendaError) throw vendaError;
+            const vendaId = vendaData.id;
+
+            // 3. Inserir Itens
+            const { error: itensError } = await supabase.from('venda_itens').insert(
+                carrinho.map(item => ({
+                    venda_id: vendaId,
+                    produto_id: item.produto_id,
+                    quantidade: item.quantidade,
+                    preco_unitario: item.preco_unitario,
+                    preco_total: item.preco_total
+                }))
+            );
+            if (itensError) throw itensError;
+
+            // 4. Inserir Pagamentos
+            const { error: pagamentosError } = await supabase.from('venda_pagamentos').insert(
+                pagamentos.map(pag => ({
+                    venda_id: vendaId,
+                    metodo: pag.metodo,
                     valor: pag.valor
-                });
+                }))
+            );
+            if (pagamentosError) throw pagamentosError;
 
-            }
-
-            if (pag.metodo === 'Crédito Funcionário') {
-                if (pessoaSelecionada.tipo === 'Funcionario') {
-                    const { error: creditoError } = await supabase.rpc('descontar_credito_funcionario', {
+            // 5. Processar Regras de Negócio
+            for (const pag of pagamentos) {
+                if (pag.metodo === 'A Prazo') {
+                    const hoje = new Date();
+                    const dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 6);
+                    await supabase.from('contas_a_receber').insert({
+                        descricao: `Venda #${vendaId}`,
+                        valor: pag.valor,
+                        data_vencimento: dataVencimento.toISOString().slice(0, 10),
+                        cliente_id: clienteId,
+                        status: 'Pendente'
+                    });
+                }
+                if (pag.metodo === 'Dinheiro' && caixaAberto) {
+                    await supabase.from('caixa_movimentacoes').insert({
+                        caixa_id: caixaAberto.id,
+                        tipo: 'VENDA',
+                        descricao: `Venda #${vendaId}`,
+                        valor: pag.valor
+                    });
+                }
+                if (pag.metodo === 'Crédito Funcionário' && pessoaSelecionada.tipo === 'Funcionario') {
+                    await supabase.rpc('descontar_credito_funcionario', {
                         id_funcionario: pessoaSelecionada.id,
                         valor_desconto: pag.valor
                     });
-
-                    if (creditoError) {
-                        console.error("ERRO CRÍTICO ao descontar crédito:", creditoError);
-                        alert(`ATENÇÃO: A venda #${vendaId} foi registrada, mas ocorreu um erro ao descontar o crédito do funcionário. Por favor, ajuste manualmente ou contate o suporte.`);
-                    }
                 }
             }
-        }
 
-        const { error: rpcError } = await supabase.rpc('finalizar_venda', { id_da_venda: vendaId });
-        if (rpcError) {
-            console.error("Erro na reta final:", rpcError);
-            alert(`Erro ao finalizar venda: ${rpcError.message}`);
-            return;
-        }
+            // 6. Finalizar via RPC
+            const { error: rpcError } = await supabase.rpc('finalizar_venda', { id_da_venda: vendaId });
+            if (rpcError) throw rpcError;
 
-        alert("Venda finalizada com sucesso!");
-        setCarrinho([]);
-        setPessoaSelecionada(null);
-        setDesconto(0);
+            // SUCESSO
+            setToastMsg("Venda realizada com sucesso!");
+            setToastSeverity('success');
+            setToastOpen(true);
+
+            setCarrinho([]);
+            setPessoaSelecionada(null);
+            setDesconto(0);
+
+        } catch (error: any) {
+            console.error("Erro Crítico:", error);
+            setToastMsg(error.message || "Erro inesperado ao salvar venda.");
+            setToastSeverity('error');
+            setToastOpen(true);
+        } finally {
+            setEstaSalvando(false);
+        }
     };
-
 
     if (!caixaAberto) return <AvisoCaixaFechado />;
 
@@ -269,11 +254,7 @@ const VendasPage: React.FC = () => {
                 </Paper>
                 <Paper sx={{ p: 2 }}>
                     <Typography variant="h6" sx={{ mb: 2 }}>Carrinho</Typography>
-                    <CarrinhoItens
-                        items={carrinho}
-                        onUpdateQuantidade={handleUpdateQuantidade}
-                        onRemoveItem={handleRemoveItem}
-                    />
+                    <CarrinhoItens items={carrinho} onUpdateQuantidade={handleUpdateQuantidade} onRemoveItem={handleRemoveItem} />
                 </Paper>
             </Grid>
 
@@ -303,14 +284,28 @@ const VendasPage: React.FC = () => {
                         variant="contained"
                         size="large"
                         fullWidth
-                        disabled={carrinho.length === 0}
+                        disabled={carrinho.length === 0 || estaSalvando}
                         onClick={() => setPagamentoDialogOpen(true)}
+                        startIcon={estaSalvando && <CircularProgress size={20} color="inherit" />}
                     >
-                        Finalizar Venda
+                        {estaSalvando ? 'Processando...' : 'Finalizar Venda'}
                     </Button>
                 </Paper>
             </Grid>
 
+            {/* COMPONENTE DE NOTIFICAÇÃO (TOAST) */}
+            <Snackbar
+                open={toastOpen}
+                autoHideDuration={3000}
+                onClose={() => setToastOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setToastOpen(false)} severity={toastSeverity} variant="filled" sx={{ width: '100%' }}>
+                    {toastMsg}
+                </Alert>
+            </Snackbar>
+
+            {/* MODAL DE PAGAMENTO */}
             <PagamentoDialog
                 open={pagamentoDialogOpen}
                 onClose={() => setPagamentoDialogOpen(false)}
@@ -320,28 +315,19 @@ const VendasPage: React.FC = () => {
                 creditoDisponivel={pessoaSelecionada?.credito_disponivel ?? 0}
             />
 
-            {blocker.state === "blocked" ? (
-                <Dialog
-                    open={true}
-                    onClose={() => blocker.reset?.()}
-                >
+            {/* DIÁLOGO DE BLOQUEIO DE SAÍDA */}
+            {blocker.state === "blocked" && (
+                <Dialog open={true} onClose={() => blocker.reset?.()}>
                     <DialogTitle>Descartar Pedido?</DialogTitle>
                     <DialogContent>
-                        <DialogContentText>
-                            Você tem itens no carrinho. Se você sair da página agora, o pedido atual será perdido.
-                            Tem certeza que deseja continuar?
-                        </DialogContentText>
+                        <DialogContentText>Você tem itens no carrinho. Deseja realmente sair e perder os dados desta venda?</DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => blocker.reset?.()} color="primary">
-                            Cancelar
-                        </Button>
-                        <Button onClick={() => blocker.proceed?.()} color="warning" autoFocus>
-                            Sair da Página
-                        </Button>
+                        <Button onClick={() => blocker.reset?.()}>Ficar</Button>
+                        <Button onClick={() => blocker.proceed?.()} color="warning">Sair da Página</Button>
                     </DialogActions>
                 </Dialog>
-            ) : null}
+            )}
         </Grid>
     );
 };

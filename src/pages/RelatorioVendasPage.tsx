@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Box, Paper, Typography, Grid, TextField, Button, IconButton } from '@mui/material';
+import { Box, Paper, Typography, Grid, TextField, Button, IconButton, Snackbar, Alert } from '@mui/material';
 import { GridColDef, GridActionsCellItem, GridRowParams } from '@mui/x-data-grid';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -41,6 +41,9 @@ const RelatorioVendasPage: React.FC = () => {
     const [selectedVendaId, setSelectedVendaId] = useState<number | null>(null);
     const [vendaSelecionada, setVendaSelecionada] = useState<Venda | null>(null);
     const [detalhesOpen, setDetalhesOpen] = useState(false);
+    const [toastOpen, setToastOpen] = useState(false);
+    const [toastMsg, setToastMsg] = useState('');
+    const [toastSeverity, setToastSeverity] = useState<'success' | 'error'>('success');
 
     const fetchVendas = useCallback(async () => {
         setLoading(true);
@@ -88,7 +91,13 @@ const RelatorioVendasPage: React.FC = () => {
     };
 
     const handleEmissaoSucesso = () => {
-        console.log("NF-e emitida! Atualizar a lista de vendas.");
+        // Recarrega as vendas para que o status_nfe atualizado venha do banco
+        fetchVendas();
+
+        // Dispara o Toast de sucesso (usando os estados que criamos antes)
+        setToastMsg("NF-e emitida e vinculada à venda!");
+        setToastSeverity('success');
+        setToastOpen(true);
     };
 
 
@@ -215,6 +224,17 @@ const RelatorioVendasPage: React.FC = () => {
                 vendaId={selectedVendaId}
                 onSuccess={handleEmissaoSucesso}
             />
+
+            <Snackbar
+                open={toastOpen}
+                autoHideDuration={3000}
+                onClose={() => setToastOpen(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setToastOpen(false)} severity={toastSeverity} variant="filled" sx={{ width: '100%' }}>
+                    {toastMsg}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

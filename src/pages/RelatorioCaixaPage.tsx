@@ -171,7 +171,7 @@ export const RelatorioCaixaPage: React.FC = () => {
     return (
         <Box>
             <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>Relatório de Caixa</Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>Resumo dos últimos 30 dias</Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>Resumo dos últimos caixas</Typography>
 
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}><SummaryCard title="Total de Vendas" value={summary?.total_vendas} icon={<AttachMoneyIcon />} color="#388e3c" /></Grid>

@@ -73,15 +73,7 @@ export const DialogEmissaoNFe: React.FC<DialogEmissaoNFeProps> = ({ open, onClos
         setError(null);
 
         try {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-            if (sessionError) {
-                throw new Error('Falha ao obter a sessão do usuário.');
-            }
-
-            if (!session?.access_token) {
-                throw new Error('Usuário não autenticado. Faça o login novamente.');
-            }
+            const { data: { session } } = await supabase.auth.getSession();
 
             const response = await fetch(
                 `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/emitir-nfe`,
@@ -89,7 +81,7 @@ export const DialogEmissaoNFe: React.FC<DialogEmissaoNFeProps> = ({ open, onClos
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`,
+                        'Authorization': `Bearer ${session?.access_token}`,
                     },
                     body: JSON.stringify({ vendaId: vendaId }),
                 }
@@ -97,11 +89,9 @@ export const DialogEmissaoNFe: React.FC<DialogEmissaoNFeProps> = ({ open, onClos
 
             const responseData = await response.json();
 
-            if (!response.ok) {
-                throw new Error(responseData.error || 'Ocorreu um erro na emissão da nota.');
-            }
+            if (!response.ok) throw new Error(responseData.error || 'Erro na emissão');
 
-            alert('NF-e emitida com sucesso!');
+            // Chama o callback que recarrega a lista no RelatorioVendasPage
             onSuccess();
             onClose();
 
