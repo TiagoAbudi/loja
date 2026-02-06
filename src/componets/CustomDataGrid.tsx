@@ -11,7 +11,8 @@ import {
     MenuItem,
     Menu,
     ListItemIcon,
-    ListItemText
+    ListItemText,
+    Button
 } from '@mui/material';
 import {
     DataGrid,
@@ -31,7 +32,8 @@ import {
     gridDensitySelector,
     GridRowId,
     GridValidRowModel,
-    QuickFilter
+    QuickFilter,
+    gridRowSelectionStateSelector
 } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -43,6 +45,7 @@ import { ptBR } from '@mui/x-data-grid/locales';
 import CheckIcon from '@mui/icons-material/Check';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import PublishIcon from '@mui/icons-material/Publish';
+import LabelIcon from '@mui/icons-material/Label';
 
 type OwnerState = {
     expanded: boolean;
@@ -90,6 +93,7 @@ interface CustomDataGridProps<T extends GridValidRowModel> {
     getRowId?: (row: T) => GridRowId;
     onImport?: () => void;
     columnSort?: string;
+    onPrintLabels?: (selectedRows: T[]) => void;
 }
 
 export const CustomDataGrid = <T extends GridValidRowModel>({
@@ -100,7 +104,8 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
     onAdd,
     getRowId,
     onImport,
-    columnSort
+    columnSort,
+    onPrintLabels
 }: CustomDataGridProps<T>) => {
 
     function CustomToolbar() {
@@ -110,12 +115,36 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
         const density = useGridSelector(apiRef, gridDensitySelector);
         const [densityMenuOpen, setDensityMenuOpen] = React.useState(false);
         const densityMenuTriggerRef = React.useRef<HTMLButtonElement>(null);
+        const selectionModel = useGridSelector(apiRef, gridRowSelectionStateSelector);
+
+        // Convertemos para array de IDs de forma segura para o TS
+        const selectedIDs = Array.isArray(selectionModel)
+            ? selectionModel
+            : Array.from(selectionModel as any);
+
+        const selectedCount = selectedIDs.length;
 
         return (
             <Toolbar>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', flex: 1, mx: 0.5 }}>
                     {title}
                 </Typography>
+
+                {/* {selectedCount > 0 && ( */}
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        size="small"
+                        startIcon={<LabelIcon />}
+                        onClick={() => {
+                            // Pegamos os objetos completos para enviar ao componente de impressão
+                            const selectedRows = Array.from(apiRef.current.getSelectedRows().values());
+                            onPrintLabels?.(selectedRows as T[]);
+                        }} 
+                    >
+                        Imprimir {selectedCount} Etiquetas
+                    </Button>
+                {/* )} */}
 
                 <Tooltip title="Colunas">
                     <ColumnsPanelTrigger render={<ToolbarButton />}>
@@ -265,6 +294,7 @@ export const CustomDataGrid = <T extends GridValidRowModel>({
                     sorting: { sortModel: [{ field: columnSort ?? 'id', sort: 'desc' }] },
                 }}
                 localeText={ptBR.components.MuiDataGrid.defaultProps.localeText}
+                checkboxSelection
             />
         </Box>
     );

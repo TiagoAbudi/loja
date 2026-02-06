@@ -24,6 +24,7 @@ import { ProductFormDialog } from '../componets/ProductFormDialog';
 import { ConfirmationDialog } from '../componets/ConfirmationDialog';
 import { CustomDataGrid } from '../componets/CustomDataGrid';
 import { DialogImportData } from '../componets/DialogImportData';
+import { PriceTagPrint } from '../componets/PriceTagPrint';
 
 const productsQuery = supabase.from('Produtos').select('*');
 type Products = QueryData<typeof productsQuery>;
@@ -38,6 +39,15 @@ const ProductsPage: React.FC = () => {
     const [productToDelete, setProductToDelete] = useState<number | null>(null);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [importDialogOpen, setImportDialogOpen] = useState(false);
+    const [selectedToPrint, setSelectedToPrint] = useState<Product[]>([]);
+
+    const handlePrint = (rows: Product[]) => {
+        setSelectedToPrint(rows);
+        // Pequeno delay para o React renderizar o componente oculto antes de chamar o print
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    };
 
     const columns: GridColDef<Product>[] = [
         { field: 'id', headerName: 'ID', width: 90, align: 'center', headerAlign: 'center' },
@@ -199,6 +209,7 @@ const ProductsPage: React.FC = () => {
                 loading={loading}
                 onAdd={handleOpenAddDialog}
                 onImport={handleOpenImportDialog}
+                onPrintLabels={handlePrint}
             />
 
             <ProductFormDialog
@@ -222,13 +233,15 @@ const ProductsPage: React.FC = () => {
                 title='Produtos'
                 tableName='Produtos'
                 csvExemplo={CABECALHOS_PRODUTOS}
-                exemploLinhaCsv={EXEMPLO_LINHA_PRODUTOS} 
+                exemploLinhaCsv={EXEMPLO_LINHA_PRODUTOS}
                 mapeamentoColunas={mapearDadosProduto}
                 onImportSuccess={() => {
                     fetchProducts();
                     handleCloseDialog();
                 }}
             />
+
+            <PriceTagPrint produtos={selectedToPrint} /> 
         </Box>
     );
 };
